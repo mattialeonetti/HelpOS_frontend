@@ -1,11 +1,12 @@
 # Hackathon-Template-Repository
 The template for Hackathon for Crisis Apps. Please fork into your own space and add members of your team so we can see all participants. 
 
-## Instructions
-1. Every team should have their GitHub repository
-2. Add your team members as contributors
-3. This repository must be open source (and licensed) in order to submit
-4. Document your project following the instruction below
+## Quick Start
+1. Clone or fork this repository
+2. Every team should have their GitHub repo
+3. Add your team members as contributors
+4. This repository must be open source (and licensed) in order to submit
+5. Document your project following the instruction below
 
 ## Project Documentation
 In the `README.md` file cover the following points:
@@ -16,3 +17,5 @@ In the `README.md` file cover the following points:
 5. Specify tech stack
 
 Before the pitch session put your presentation in the `pitch/` folder.
+
+Happy hacking!
