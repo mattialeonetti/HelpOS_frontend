@@ -1,9 +1,8 @@
 # Hackathon-Template-Repository
-The template for Hackathon for Crisis Apps. Please fork into your own space and add members of your team so we can see all participants. 
+This is the official template repository for the **"Hackathon for Crisis Apps for GaaP"** seminar hackathon. All teams must use this template to create their project repository.
 
-## Quick Start
-1. Clone or fork this repository
-2. Every team should have their GitHub repo
+## 🚀 Quick Start: Creating Your Team Repository
+1. Fork this repository
 3. Add your team members as contributors
 4. This repository must be open source (and licensed) in order to submit
 5. Document your project following the instruction below
