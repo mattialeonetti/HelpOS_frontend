@@ -7,7 +7,7 @@ This is the official template repository for the **"Hackathon for Crisis Apps fo
 4. This repository must be open source (and licensed) in order to submit
 5. Document your project following the instruction below
 
-## Project Documentation
+## 💻 Project Documentation
 In the `README.md` file cover the following points:
 1. Title of the project
 2. List all team members
