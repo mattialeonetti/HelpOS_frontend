@@ -6,7 +6,6 @@ export const useFormStore = defineStore('form', {
     topics: [],
     forms: {},
     isLoading: false,
-    formsLoading: false,
     error: null
   }),
 
@@ -54,7 +53,7 @@ export const useFormStore = defineStore('form', {
 
     async fetchFormsForTopic(topicId) {
       try {
-        this.formsLoading = true
+        this.isLoading = true
         this.error = null
         const response = await api.get(`/topics/${topicId}/forms`)
         this.forms[topicId] = response
@@ -62,23 +61,25 @@ export const useFormStore = defineStore('form', {
         this.error = err.message || 'Failed to fetch forms'
         console.error('Failed to fetch forms:', err)
       } finally {
-        this.formsLoading = false
+        this.isLoading = false
       }
     },
 
-    async addForm(topicId,formData) {
+    async addForm(topicId, formData) {
       try {
-        this.formsLoading = true
+        this.isLoading = true
         this.error = null
         const response = await api.post(`/topics/${topicId}/forms`, formData)
-        this.forms.push(response)
+
+        // Initialize array if it doesn't exist
+        this.forms = { ...this.forms, [topicId]: [...(this.forms[topicId] || []), response] }
         return response
       } catch (err) {
         this.error = err.message || 'Failed to add form'
         console.error('Failed to add form:', err)
         throw err
       } finally {
-        this.formsLoading = false
+        this.isLoading = false
       }
     },
   }

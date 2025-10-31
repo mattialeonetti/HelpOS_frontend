@@ -8,6 +8,7 @@ class ApiService {
         const config = {
             headers: {
                 'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true', // Required for ngrok URLs
                 ...options.headers,
             },
             ...options,

@@ -47,6 +47,10 @@ export const useQuestionStore = defineStore('question', {
             } finally {
                 this.isLoading = false
             }
+        },
+
+        resetQuestions() {
+            this.questions = {}
         }
     }
 })
