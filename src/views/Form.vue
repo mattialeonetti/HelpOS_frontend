@@ -1,81 +1,47 @@
 <template>
   <div class="form-view">
-    <Card>
-      <template #title>
-        <div class="form-header">
-          <h1>{{ currentForm?.title || 'Form' }}</h1>
-          <p v-if="currentForm?.description">{{ currentForm.description }}</p>
+    <div class="form-header">
+      <h1>{{ currentForm?.title || 'Form' }}</h1>
+      <p v-if="currentForm?.description">{{ currentForm.description }}</p>
+    </div>
+    <div class="form-layout">
+      <div class="form-section">
+        <div v-if="isLoading" class="loading">
+          <Skeleton width="50%" height="2rem" />
         </div>
-      </template>
-      <template #content>
-        <div class="form-layout">
-          <div class="form-section">
-            <div v-if="isLoading" class="loading">
-              <Skeleton width="50%" height="2rem" />
-            </div>
 
-            <Message v-else-if="hasError" severity="error" :closable="false">
-              <div class="error-content">
-                <p>{{ error }}</p>
-                <Button label="Retry" icon="pi pi-refresh" @click="loadForm" severity="secondary" size="small" />
-              </div>
-            </Message>
+        <Message v-else-if="hasError" severity="error" :closable="false">
+          <div class="error-content">
+            <p>{{ error }}</p>
+            <Button label="Retry" icon="pi pi-refresh" @click="loadForm" severity="secondary" size="small" />
+          </div>
+        </Message>
 
-            <form v-else @submit.prevent="submitForm" class="dynamic-form">
-              <!-- Dynamic form fields -->
-              <div v-for="field in formFields" :key="field.id" class="form-group">
-                <label :for="field.id">
-                  {{ field.label }}
-                  <span v-if="field.required" class="required">*</span>
-                </label>
-
-                <!-- Text Input -->
-                <InputText v-if="field.type === 'text'" :id="field.id" v-model="formData[field.id]"
-                  :placeholder="field.placeholder" :class="{ 'p-invalid': fieldErrors[field.id] }" />
-
-                <!-- Textarea -->
-                <Textarea v-else-if="field.type === 'textarea'" :id="field.id" v-model="formData[field.id]"
-                  :placeholder="field.placeholder" rows="4" :class="{ 'p-invalid': fieldErrors[field.id] }" />
-
-                <!-- Dropdown -->
-                <Dropdown v-else-if="field.type === 'select'" :id="field.id" v-model="formData[field.id]"
-                  :options="field.options" optionLabel="label" optionValue="value" placeholder="Select an option"
-                  :class="{ 'p-invalid': fieldErrors[field.id] }" />
-
-                <!-- Checkbox -->
-                <div v-else-if="field.type === 'checkbox'" class="checkbox-group">
-                  <Checkbox :id="field.id" v-model="formData[field.id]" :binary="true" />
-                  <label :for="field.id">{{ field.label }}</label>
-                </div>
-
-                <small v-if="fieldErrors[field.id]" class="p-error">
-                  {{ fieldErrors[field.id] }}
-                </small>
-              </div>
-
-              <div class="form-actions">
-                <Button type="submit" :label="isSubmitting ? 'Submitting...' : 'Submit Form'" icon="pi pi-check"
-                  :loading="isSubmitting" :disabled="isSubmitting" />
-                <Button label="Back to Forms" icon="pi pi-arrow-left" @click="$router.push('/form-select')"
-                  severity="secondary" />
-              </div>
-            </form>
+        <form v-else class="dynamic-form">
+          <div v-for="question in formQuestions" :key="question.id" class="form-group">
+            <Question :questionId="question.id" /> 
           </div>
 
-          <!-- Divider -->
-          <Divider layout="vertical" class="form-divider" />
-
-          <!-- Right Section: Cases (1/3 width) - Placeholder -->
-          <div class="cases-section">
-            <div class="cases-placeholder">
-              <h3>Cases</h3>
-              <p class="placeholder-text">Case view will be imported here</p>
-              <!-- Cases component will be imported here later -->
-            </div>
+          <div class="form-actions">
+            <Button type="submit" :label="submitForm"/>
+            <Button label="Cancel Case Run" icon="pi pi-arrow-left" @click="$router.push('/form-select')"
+              severity="secondary" />
           </div>
+        </form>
+      </div>
+
+      <!-- Divider -->
+      <Divider layout="vertical" class="form-divider" />
+
+      <!-- Right Section: Cases (1/3 width) - Placeholder -->
+      <div class="cases-section">
+        <div class="cases-placeholder">
+          <h3>Cases</h3>
+          <p class="placeholder-text">Case view will be imported here</p>
+          <!-- Cases component will be imported here later -->
         </div>
-      </template>
-    </Card>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -86,11 +52,12 @@ import { onBeforeRouteLeave } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useFormStore } from '@/stores/formStore'
 import {
-  Card, Button, InputText, Textarea, Dropdown,
-  Checkbox, Message, ProgressSpinner,
+  Card, Button, InputText, Textarea,
+  Checkbox, Message,
   Skeleton, Divider
 } from 'primevue'
 import { useQuestionStore } from '@/stores/questionStore'
+import Question from '@/components/question.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -99,6 +66,10 @@ const { forms } = storeToRefs(formStore)
 const questionStore = useQuestionStore()
 const { questions, isLoading, error, hasError } = storeToRefs(questionStore)
 
+const formQuestions = computed(() => {
+  const formId = route.params.id
+  return questions.value.filter(q => q.formId === formId)
+})
 // Form state
 const formData = ref({})
 const fieldErrors = ref({})
@@ -230,7 +201,8 @@ onBeforeUnmount(() => {
 /* Left section: Form (2/3 width) */
 .form-section {
   flex: 2;
-  min-width: 0; /* Prevents flex item from overflowing */
+  min-width: 0;
+  /* Prevents flex item from overflowing */
 }
 
 /* Divider styling */
@@ -324,11 +296,11 @@ onBeforeUnmount(() => {
   .form-layout {
     flex-direction: column;
   }
-  
+
   .form-divider {
     display: none;
   }
-  
+
   .cases-section {
     min-width: 100%;
   }

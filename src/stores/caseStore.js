@@ -20,13 +20,13 @@ export const useCaseStore = defineStore('case', {
         }
     },
     actions: {
-        async startCaseRun(topicId, formId) {
+        async startCaseRun(topicId, formId, profileId) {
             this.topicId = topicId
             this.formId = formId
             this.isLoading = true
             this.error = null
             try {
-                const response = await api.post(`/topics/${topicId}/forms/${formId}/cases`)
+                const response = await api.post(`/topics/${topicId}/forms/${formId}/cases`, { profileId })
                 this.caseRun = response
             } catch (err) {
                 this.error = err.message || 'Failed to start case run'
