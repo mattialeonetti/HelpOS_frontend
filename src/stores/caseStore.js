@@ -54,11 +54,12 @@ export const useCaseStore = defineStore('case', {
             }
         },
 
-        async closeCaseRun() {
+        async closeCaseRun(outcome) {
             this.isLoading = true
             this.error = null
             try {
-                const response = await api.post(`/topics/${this.topicId}/forms/${this.formId}/runs/${this.caseRun.id}/close`)
+                this.caseRun.outcome = outcome
+                const response = await api.post(`/topics/${this.topicId}/forms/${this.formId}/runs/${this.caseRun.id}/close`, this.caseRun)
                 this.caseRun = response
             } catch (err) {
                 this.error = err.message || 'Failed to close case run'

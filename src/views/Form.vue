@@ -22,7 +22,7 @@
           </div>
         </Message>
 
-  <form v-else class="dynamic-form" @submit.prevent @keydown.enter.prevent>
+        <form v-else class="dynamic-form" @submit.prevent @keydown.enter.prevent>
           <div v-for="question in formQuestions" :key="question.id" class="form-group">
             <Question :questionId="question.id" />
           </div>
@@ -45,7 +45,7 @@
           </div>
           <Divider />
           <SelectButton label="Decision: " v-model="decision" :options="['approved', 'rejected']" class="w-full" />
-          <Button label="Complete Case" @click="completeCase(answer)" style="margin-top: 1em" />
+          <Button label="Complete Case" @click="completeCase()" style="margin-top: 1em" />
         </div>
       </Dialog>
 
@@ -123,6 +123,7 @@ import Question from '@/components/Question.vue'
 import Cases from './Cases.vue'
 
 const route = useRoute()
+const router = useRouter()
 
 const formStore = useFormStore()
 const { forms } = storeToRefs(formStore)
@@ -182,9 +183,9 @@ const loadForm = async () => {
 
 const completeCase = async () => {
   try {
-    await caseStore.closeCaseRun()
-    allowLeaving.value = true
-    route.push('/form-select')
+  await caseStore.closeCaseRun(decision.value)
+  allowLeaving.value = true
+  await router.push('/form-select')
   } catch (error) {
     console.error('Failed to submit form:', error)
   } finally {
@@ -397,6 +398,7 @@ const createQuestion = () => {
   }
 
   .top-dialog-footer {
-    padding: .5rem 1rem; }
+    padding: .5rem 1rem;
+  }
 }
 </style>

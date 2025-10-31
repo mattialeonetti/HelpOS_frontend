@@ -180,7 +180,7 @@ const subQuestions = computed(() => {
   const children = allQuestionsFlat.value.filter(q => q.parentQuestionId === props.questionId)
   const selected = selectedOptionId.value
   // Show all if not selected, filter by gating answer if selected
-  return children.filter(q => selected == null || !q.parentAnswerId || q.parentAnswerId === selected)
+  return children.filter(q => q.parentAnswerId === selected)
 })
 
 const createSubQuestion = () => {
