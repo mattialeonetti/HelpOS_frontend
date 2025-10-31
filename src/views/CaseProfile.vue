@@ -2,7 +2,7 @@
   <div class="case-profile">
     <Card>
       <template #title>
-        <h3>Case Profile</h3>
+        <h3 class="card-title">Case Profile</h3>
       </template>
 
       <template #content>
@@ -257,5 +257,13 @@ function goToNext() {
 .mr-2 {
   margin-right: 0.5rem;
 }
+
+/* Center the Card title */
+.card-title {
+  text-align: center;
+  margin: 0;
+}
+
 </style>
+
 
