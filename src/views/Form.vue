@@ -8,7 +8,7 @@
             <h1>{{ currentForm?.title || 'Form' }}</h1>
             <Button icon="pi pi-plus" @click="showCreateDialog = true" />
           </div>
-          <p v-if="currentForm?.description">{{ currentForm.description }}</p>
+          <p v-if="currentForm?.description" style="margin-bottom: 1em;">{{ currentForm.description }}</p>
         </div>
 
         <div v-if="isLoading" class="loading">
@@ -93,7 +93,7 @@
 
         <template #footer>
           <div class="dialog-footer">
-            <Button label="Cancel" severity="secondary" @click="showCreateDialog = false" />
+            <Button label="Cancel" severity="secondary" @click="showCreateDialog = false" style="margin-right: 1em;"/>
             <Button label="Create" icon="pi pi-check" @click="createQuestion" />
           </div>
         </template>
