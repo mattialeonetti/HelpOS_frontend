@@ -1,10 +1,30 @@
 <template>
   <div class="form-select">
-    <div style="display: flex; justify-content: space-between; margin-bottom: 2em;">
-      <h1>Select a Form</h1>
-      <Button label="Create Topic" icon="pi pi-plus" class="ml-4" @click="createTopicVisible = true" />
-    </div>
+    <!-- Toolbar -->
+    <Toolbar class="topbar nav-toolbar">
+      <template #start>
+        <Button
+          icon="pi pi-plus"
+          label="Create Topic"
+          text
+          plain
+          severity="secondary"
+          class="create-topic-btn"
+          @click="createTopicVisible = true"
+        />
+      </template>
 
+      <template #end>
+        <IconField class="search-field">
+          <InputIcon>
+            <i class="pi pi-search" />
+          </InputIcon>
+          <InputText v-model="q" placeholder="Search" />
+        </IconField>
+      </template>
+    </Toolbar>
+
+    <!-- loading -->
     <div v-if="isLoading">
       <Skeleton width="50%" height="2rem" />
     </div>
@@ -16,37 +36,86 @@
       </div>
     </Message>
 
-    <div v-else class="accordion-container">
-      <Accordion v-model:value="activeAccordionIndex">
-        <AccordionPanel v-for="topic in topics" :key="topic.id" :value="topic.id">
-          <AccordionHeader>
-            <h2>{{ topic.name }}</h2>
-          </AccordionHeader>
-          <AccordionContent>
-            <div style="display: flex;align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-              <p>{{ topic.description }}</p>
-              <Button
-                label="Create Form"
-                icon="pi pi-plus"
-                class="ml-4"
-                @click="createFormVisible = true; createFormTopicId = topic.id"
-              />
+    <!-- Panel -->
+    <div v-else class="topics">
+      <Panel
+        v-for="(topic, idx) in topics"
+        :key="topic.id"
+        toggleable
+        :collapsed="collapsedStates[topic.id] ?? (idx !== 0)"
+        class="topic-panel"
+        @toggle="onToggle(topic.id)"
+        :pt="{
+          header:  { class: 'topic-header-pad' },
+          content: { class: 'topic-content-pad' }
+        }"
+      >
+        <template #header>
+          <div class="topic-header">
+            <div class="topic-title">
+              <h2 class="m-0">{{ topic.name }}</h2>
+              <div class="topic-sub">
+                <span class="desc" v-if="topic.description">{{ topic.description }}</span>
+                <Tag
+                  v-if="(forms[topic.id] || []).length"
+                  :value="`${(forms[topic.id] || []).length} forms`"
+                  severity="secondary"
+                  rounded
+                />
+              </div>
             </div>
+          </div>
+        </template>
 
-            <div class="forms-list">
-              <Card
-                v-for="form in forms[topic.id]"
-                :key="form.id"
-                class="form-card"
-                @click="selectForm(topic.id, form.id)"
-              >
-                <template #title><h5>{{ form.title }}</h5></template>
-                <template #content><p class="m-0">{{ form.description }}</p></template>
-              </Card>
-            </div>
-          </AccordionContent>
-        </AccordionPanel>
-      </Accordion>
+        <template #icons>
+          <Button
+            icon="pi pi-plus"
+            text
+            rounded
+            class="p-button-sm create-icon"
+            @click.stop="openCreateForm(topic.id)"
+            v-tooltip.bottom="'Create Form'"
+            aria-label="Create Form"
+          />
+        </template>
+
+        <template #togglericon>
+          <i
+            :class="[
+              'pi',
+              collapsedStates[topic.id] ? 'pi-chevron-down' : 'pi-chevron-up',
+              'toggle-arrow'
+            ]"
+          ></i>
+        </template>
+
+        <!-- forms -->
+        <div v-if="(forms[topic.id] || []).length" class="forms-list">
+          <Card
+            v-for="form in forms[topic.id]"
+            :key="form.id"
+            class="form-card"
+            :pt="{
+              body:    { class: 'card-body-reset' },
+              content: { class: 'card-content-reset' },
+              title:   { class: 'card-title-reset' }
+            }"
+            @click="selectForm(topic.id, form.id)"
+          >
+            <template #title>
+              <h5 class="m-0">{{ form.title }}</h5>
+            </template>
+            <template #content>
+              <p class="m-0 text-muted">{{ form.description }}</p>
+            </template>
+          </Card>
+        </div>
+
+        <div v-else class="empty-forms">
+          <i class="pi pi-inbox mr-2" />
+          <span>No form yet under this topic.</span>
+        </div>
+      </Panel>
     </div>
 
     <!-- Create Topic Dialog -->
@@ -95,8 +164,12 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
+
+// PrimeVue
+import { Panel, Tag, Card, Button, Message, Skeleton, Dialog, InputText, IftaLabel } from 'primevue'
+import { Toolbar, IconField, InputIcon } from 'primevue'
+
 import { useFormStore } from '@/stores/formStore'
-import { Card, Button, Message, Skeleton, Accordion, AccordionPanel, AccordionHeader, AccordionContent, Dialog, InputText, IftaLabel } from 'primevue'
 import { useCaseStore } from '@/stores/caseStore'
 import { useProfileStore } from '@/stores/profileStore'
 import { useQuestionStore } from '@/stores/questionStore'
@@ -108,15 +181,16 @@ const profileStore = useProfileStore()
 const questionStore = useQuestionStore()
 const { topics, forms, isLoading, error, hasError } = storeToRefs(formStore)
 
-const activeAccordionIndex = ref([])
-const createTopicVisible = ref(false)
-const createTopicName = ref('')
-const createTopicDescription = ref('')
-const createFormVisible = ref(false)
-const createFormTitle = ref('')
-const createFormDescription = ref('')
-const createFormTopicId = ref(null)
+const q = ref('') 
 
+const collapsedStates = ref({})
+function onToggle(id) {
+  collapsedStates.value[id] = !collapsedStates.value[id]
+}
+function openCreateForm(topicId) {
+  createFormTopicId.value = topicId
+  createFormVisible.value = true
+}
 const selectForm = async (topicId, formId) => {
   await caseStore.startCaseRun(topicId, formId, profileStore.profile.id)
   formStore.selectedFormId = formId
@@ -133,6 +207,10 @@ onMounted(async () => {
   }
 })
 
+/** Create Topic */
+const createTopicVisible = ref(false)
+const createTopicName = ref('')
+const createTopicDescription = ref('')
 const createTopic = async () => {
   try {
     formStore.addTopic({ name: createTopicName.value, description: createTopicDescription.value })
@@ -144,6 +222,11 @@ const createTopic = async () => {
   }
 }
 
+/** Create Form */
+const createFormVisible = ref(false)
+const createFormTitle = ref('')
+const createFormDescription = ref('')
+const createFormTopicId = ref(null)
 const createForm = async () => {
   try {
     formStore.addForm(createFormTopicId.value, { title: createFormTitle.value, description: createFormDescription.value })
@@ -160,38 +243,88 @@ const createForm = async () => {
 <style scoped>
 .form-select { padding: 1rem; }
 
+
+.form-card :deep(.card-body-reset) {
+  padding: 0rem 0.6rem;
+}
+.form-card :deep(.card-content-reset) {
+  padding: 0rem 0.6rem;
+}
+.form-card :deep(.card-title-reset) {
+  margin: 0rem 0.6rem;
+}
+
+.form-card h5,
+.form-card p {
+  padding-block: 0.6rem;
+}
+
+.topic-panel :deep(.topic-header-pad) {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.topic-panel :deep(.topic-content-pad) {
+  padding-top: 0.5rem;
+  padding-bottom: 2rem;
+}
+
+.nav-toolbar { margin-bottom: 1.0rem; } 
+
 .error-content {
   display: flex; justify-content: space-between; align-items: center; gap: 1rem;
 }
-
-.accordion-container { width: 100%; }
-
-.forms-list {
-  display: flex; flex-wrap: wrap; flex-direction: column; gap: 1rem; margin-top: 1rem;
+.topbar {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
 }
-
-.form-card {
-  cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%;
+.nav-toolbar {
+  border-radius: 3rem;
+  padding: 1rem 1rem 1rem 1.5rem;
+  background: var(--surface-card);
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
 }
+.create-topic-btn :deep(.p-button-label) { font-weight: 600; }
+.search-field :deep(.p-inputtext) {
+  width: 20rem;
+  max-width: 36vw;
+  border-radius: 9999px;
+  padding-left: 2.25rem;
+  background: var(--surface-100);
+  border-color: transparent;
+}
+.search-field :deep(.p-inputtext:focus) {
+  border-color: var(--primary-color);
+  background: var(--surface-card);
+}
+.search-field :deep(.p-inputicon) {
+  left: .75rem;
+  color: var(--text-color-secondary);
+}
+.topics { width: 100%; display: flex; flex-direction: column; gap: 1rem; }
+.topic-panel :deep(.p-panel-header) { align-items: center; }
+.topic-panel :deep(.p-panel-icons-end) { display: flex; gap: .25rem; }
+.topic-header { display: flex; align-items: center; gap: .5rem; }
+.topic-title h2 { margin: 0; font-size: 1.5rem; }
+.topic-sub { display: flex; align-items: center; gap: .5rem; margin-top: .25rem; }
+.topic-sub .desc { color: var(--text-color-secondary); }
+.toggle-arrow {
+  font-size: 1rem;
+  color: var(--text-color-secondary);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+.toggle-arrow:hover { color: var(--primary-color); }
+.create-icon { margin-left: .25rem; }
+.forms-list { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
+.form-card { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%; }
 .form-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,.15); }
-.form-card h3 { margin: 0; color: #333; }
-.form-card p { color: #666; margin: 0; }
-.form-meta { display: flex; justify-content: space-between; align-items: center; }
-.form-duration { color: #6c757d; display: flex; align-items: center; gap: .25rem; font-size: .875rem; }
-
-/* ========= Dialog ======== */
+.text-muted { color: #666; }
+.empty-forms { display: flex; align-items: center; gap: .5rem; color: var(--text-color-secondary); }
 .editor-dialog :deep(.p-dialog-content) { padding-top: 1rem; }
 .dialog-form { display: flex; flex-direction: column; }
-
-
 :deep(.p-inputtext) { width: 100%; }
-
-
 .mb-4 { margin-bottom: 1rem; }
 .mb-6 { margin-bottom: 1.5rem; }
-
-
 .actions-row { display: flex; gap: .5rem; justify-content: flex-end; }
-
-.actions { margin-top: 2rem; display: flex; justify-content: center; align-items: center; }
 </style>
