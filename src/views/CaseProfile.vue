@@ -2,34 +2,47 @@
   <div class="case-profile">
     <Card>
       <template #title>
-        <h1>Case Profile</h1>
+        <h3>Case Profile</h3>
       </template>
 
       <template #content>
         <div class="form-section">
           <h3>Client Information</h3>
 
-          <!-- grid -->
           <div class="p-fluid p-formgrid p-grid">
+            <!-- First & Last -->
+            <div class="p-field p-col-12">
+              <div class="name-row">
+                <div class="name-col">
+                  <IftaLabel class="w-full">
+                    <InputText
+                      id="firstName"
+                      v-model="form.firstName"
+                      placeholder="First Name"
+                      showClear
+                      fluid
+                    />
+                    <label for="firstName">First Name</label>
+                  </IftaLabel>
+                </div>
 
-            <!-- First Name -->
-            <div class="p-field p-col-12 p-md-6">
-              <IftaLabel class="w-full">
-                <InputText id="firstName" v-model="form.firstName" class="w-full" />
-                <label for="firstName">First Name</label>
-              </IftaLabel>
+                <div class="name-col">
+                  <IftaLabel class="w-full">
+                    <InputText
+                      id="lastName"
+                      v-model="form.lastName"
+                      placeholder="Last Name"
+                      showClear
+                      fluid
+                    />
+                    <label for="lastName">Last Name</label>
+                  </IftaLabel>
+                </div>
+              </div>
             </div>
 
-            <!-- Last Name -->
-            <div class="p-field p-col-12 p-md-6">
-              <IftaLabel class="w-full">
-                <InputText id="lastName" v-model="form.lastName" class="w-full" />
-                <label for="lastName">Last Name</label>
-              </IftaLabel>
-            </div>
-
-            <!-- Gender (SelectButton, no label text) -->
-            <div class="p-field p-col-12 p-md-6">
+            <!-- Gender -->
+            <div class="p-field p-col-12">
               <SelectButton
                 v-model="form.gender"
                 :options="genderOptions"
@@ -41,8 +54,8 @@
               />
             </div>
 
-            <!-- Country (Dropdown + Emoji flag with IftaLabel) -->
-            <div class="p-field p-col-12 p-md-6">
+            <!-- Country -->
+            <div class="p-field p-col-12">
               <IftaLabel class="w-full">
                 <Dropdown
                   id="country"
@@ -51,8 +64,10 @@
                   optionLabel="name"
                   dataKey="code"
                   placeholder="Select a Country"
-                  class="w-full"
+                  showClear
+                  fluid
                 >
+                  <!-- selected value -->
                   <template #value="slotProps">
                     <div v-if="slotProps.value" class="flex items-center">
                       <span class="mr-2">{{ flagEmoji(slotProps.value.code) }}</span>
@@ -60,6 +75,8 @@
                     </div>
                     <span v-else>Select a Country</span>
                   </template>
+
+                  <!-- dropdown options -->
                   <template #option="slotProps">
                     <div class="flex items-center">
                       <span class="mr-2">{{ flagEmoji(slotProps.option.code) }}</span>
@@ -72,13 +89,18 @@
             </div>
 
             <!-- Contact -->
-            <div class="p-field p-col-12 p-md-6">
+            <div class="p-field p-col-12">
               <IftaLabel class="w-full">
-                <InputText id="contact" v-model="form.contact" class="w-full" placeholder="email@example.org" />
+                <InputText
+                  id="contact"
+                  v-model="form.contact"
+                  placeholder="email@example.org"
+                  showClear
+                  fluid
+                />
                 <label for="contact">Contact (optional)</label>
               </IftaLabel>
             </div>
-
           </div>
 
           <!-- Confirm Button -->
@@ -100,6 +122,8 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+
+// PrimeVue components
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -107,17 +131,22 @@ import Dropdown from 'primevue/dropdown'
 import SelectButton from 'primevue/selectbutton'
 import IftaLabel from 'primevue/iftalabel'
 
+// Your store
+import { useProfileStore } from '@/stores/profileStore'
+
 const router = useRouter()
+const profileStore = useProfileStore()
 
 // form state
 const form = ref({
   firstName: '',
   lastName: '',
   gender: '',
-  country: null, // { name, code }
+  country: null,
   contact: ''
 })
 
+// gender & country options
 const genderOptions = [
   { label: 'Female', value: 'female' },
   { label: 'Male', value: 'male' },
@@ -136,7 +165,7 @@ const countries = [
   { name: 'Turkey', code: 'TR' }
 ]
 
-// Emoji flag
+// emoji flag generator
 function flagEmoji(code) {
   const s = String(code).toUpperCase()
   const cc = s === 'UK' ? 'GB' : s
@@ -153,31 +182,80 @@ const canContinue = computed(() =>
   form.value.country?.code
 )
 
-// navigate
+// next page
 function goToNext() {
   const fullName = `${form.value.firstName} ${form.value.lastName}`.trim()
-  router.push({
-    name: 'FormSelect',
-    query: {
-      name: fullName,
-      gender: form.value.gender,
-      country: form.value.country.name,
-      countryCode: form.value.country.code,
-      contact: form.value.contact
-    }
+  profileStore.postProfile({
+    name: fullName,
+    gender: form.value.gender,
+    country: form.value.country.name,
+    countryCode: form.value.country.code,
+    contact: form.value.contact
   })
+  router.push({ name: 'FormSelect' })
 }
 </script>
 
 <style scoped>
-.case-profile { max-width: 860px; margin: 0 auto; padding: 2rem; }
-.form-section h3 { margin-bottom: 1rem; color: var(--text-color); }
+.case-profile {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2rem;
+}
 
-/* Grid field spacing */
-.p-formgrid .p-field { margin-bottom: 1rem; }
+.form-section h3 {
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
 
-/* Adjust SelectButton padding */
-:deep(.p-selectbutton .p-button) { padding: .5rem 1rem; }
+/* First & Last inline layout */
+.name-row {
+  display: flex;
+  gap: 1.5rem;
+}
+.name-col {
+  flex: 1;
+}
 
-.actions { margin-top: 2rem; display: flex; justify-content: center; }
+/* unified spacing */
+.p-formgrid .p-field {
+  margin-bottom: 1.2rem;
+}
+
+/* selectbutton layout */
+:deep(.p-selectbutton) {
+  display: flex;
+  gap: 0.5rem;
+}
+:deep(.p-selectbutton .p-button) {
+  flex: 1;
+  padding: 0.6rem 1rem;
+}
+
+
+:deep(.p-inputtext),
+:deep(.p-dropdown) {
+  width: 100%;
+}
+
+/* responsive layout */
+@media (max-width: 768px) {
+  .name-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+/* centered button */
+.actions {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+/* Increase space between flag and country name in dropdown */
+.mr-2 {
+  margin-right: 0.5rem;
+}
 </style>
+
