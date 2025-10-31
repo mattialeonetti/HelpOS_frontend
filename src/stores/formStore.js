@@ -3,37 +3,74 @@ import api from '@/api/api'
 
 export const useFormStore = defineStore('form', {
   state: () => ({
-    forms: [],
+    topics: [],
+    forms: {},
     isLoading: false,
+    formsLoading: false,
     error: null
   }),
 
   getters: {
-    formCount: (state) => state.forms.length,
     hasError: (state) => state.error !== null,
-    getFormById: (state) => (id) => state.forms.find(form => form.id === id)
+    formForTopic: (state) => (topicId) => {
+      if (!state.forms[topicId]) {
+        fetchFormsForTopic(topicId)
+      }
+      return state.forms[topicId] || []
+    }
   },
 
   actions: {
-    async fetchForms() {
+    async fetchTopics() {
       try {
         this.isLoading = true
         this.error = null
-        const response = await api.get('forms')
-        this.forms = response
-      } catch (err) {
-        this.error = err.message || 'Failed to fetch forms'
-        console.error('Failed to fetch forms:', err)
+        const response = await api.get('/topics')
+        this.topics = response
+      }
+      catch (err) {
+        this.error = err.message || 'Failed to fetch topics'
+        console.error('Failed to fetch topics:', err)
       } finally {
         this.isLoading = false
       }
     },
 
-    async addForm(formData) {
+    async addTopic(topicData) {
       try {
         this.isLoading = true
         this.error = null
-        const response = await api.post('forms', formData)
+        const response = await api.post('/topics', topicData)
+        this.topics.push(response)
+        return response
+      } catch (err) {
+        this.error = err.message || 'Failed to add topic'
+        console.error('Failed to add topic:', err)
+        throw err
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    async fetchFormsForTopic(topicId) {
+      try {
+        this.formsLoading = true
+        this.error = null
+        const response = await api.get(`/topics/${topicId}/forms`)
+        this.forms[topicId] = response
+      } catch (err) {
+        this.error = err.message || 'Failed to fetch forms'
+        console.error('Failed to fetch forms:', err)
+      } finally {
+        this.formsLoading = false
+      }
+    },
+
+    async addForm(topicId,formData) {
+      try {
+        this.formsLoading = true
+        this.error = null
+        const response = await api.post(`/topics/${topicId}/forms`, formData)
         this.forms.push(response)
         return response
       } catch (err) {
@@ -41,42 +78,8 @@ export const useFormStore = defineStore('form', {
         console.error('Failed to add form:', err)
         throw err
       } finally {
-        this.isLoading = false
+        this.formsLoading = false
       }
     },
-
-    async updateForm(id, formData) {
-      try {
-        this.isLoading = true
-        this.error = null
-        const response = await api.put(`forms/${id}`, formData)
-        const index = this.forms.findIndex(form => form.id === id)
-        if (index !== -1) {
-          this.forms[index] = response
-        }
-        return response
-      } catch (err) {
-        this.error = err.message || 'Failed to update form'
-        console.error('Failed to update form:', err)
-        throw err
-      } finally {
-        this.isLoading = false
-      }
-    },
-
-    async deleteForm(id) {
-      try {
-        this.isLoading = true
-        this.error = null
-        await api.delete(`forms/${id}`)
-        this.forms = this.forms.filter(form => form.id !== id)
-      } catch (err) {
-        this.error = err.message || 'Failed to delete form'
-        console.error('Failed to delete form:', err)
-        throw err
-      } finally {
-        this.isLoading = false
-      }
-    }
   }
 })
