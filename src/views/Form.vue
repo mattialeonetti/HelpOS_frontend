@@ -1,6 +1,7 @@
 <template>
   <div class="form-view">
     <div class="form-layout">
+  <!-- Left: Form main section -->
       <div class="form-section">
         <div class="form-header">
           <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -9,6 +10,7 @@
           </div>
           <p v-if="currentForm?.description">{{ currentForm.description }}</p>
         </div>
+
         <div v-if="isLoading" class="loading">
           <Skeleton width="50%" height="2rem" />
         </div>
@@ -16,7 +18,13 @@
         <Message v-else-if="hasError" severity="error" :closable="false">
           <div class="error-content">
             <p>{{ error }}</p>
-            <Button label="Retry" icon="pi pi-refresh" @click="loadForm" severity="secondary" size="small" />
+            <Button
+              label="Retry"
+              icon="pi pi-refresh"
+              @click="loadForm"
+              severity="secondary"
+              size="small"
+            />
           </div>
         </Message>
 
@@ -26,19 +34,39 @@
           </div>
 
           <div class="form-actions">
-            <Button type="submit" icon="pi pi-check" label="Finish Case" @click="isSubmitting = true" />
-            <Button label="Cancel Case" class="error" icon="pi pi-arrow-left" @click="$router.push('/form-select')"
-              severity="secondary" />
+            <Button
+              type="submit"
+              icon="pi pi-check"
+              label="Finish Case"
+              @click="isSubmitting = true"
+            />
+            <Button
+              label="Cancel Case"
+              class="error"
+              icon="pi pi-arrow-left"
+              @click="$router.push('/form-select')"
+              severity="secondary"
+            />
           </div>
         </form>
       </div>
 
-      <Dialog v-model:visible="isSubmitting" modal :closable="false" :dismissable-mask="false"
-        class="submission-dialog">
+  <!-- Submission preview -->
+      <Dialog
+        v-model:visible="isSubmitting"
+        modal
+        :closable="false"
+        :dismissable-mask="false"
+        class="submission-dialog"
+      >
         <div class="submission-content">
-          <div v-for="answer in caseStore.caseRun.steps" :key="answer.questionId" class="answer-item">
-            <h3>{{formStore.forms.find(f => f.id === answer.formId)?.title}}</h3>
-            <h4>{{allQuestionsFlat.find(q => q.id === answer.questionId)?.text}}:</h4>
+          <div
+            v-for="answer in caseStore.caseRun.steps"
+            :key="answer.questionId"
+            class="answer-item"
+          >
+            <h3>{{ formStore.forms.find(f => f.id === answer.formId)?.title }}</h3>
+            <h4>{{ allQuestionsFlat.find(q => q.id === answer.questionId)?.text }}:</h4>
             <p>{{ answer.answer }}</p>
             <Divider />
             <SelectButton label="Decision: " v-model="decision" :options="['Approve', 'Reject']" class="w-full" />
@@ -47,38 +75,82 @@
         </div>
       </Dialog>
 
-      <Dialog v-model:visible="showCreateDialog" :closable="true" modal :dismissable-mask="true">
+  <!-- Top-level question creation (wider + three equal-length inputs + Answer inline on right + button) -->
+      <Dialog
+        v-model:visible="showCreateDialog"
+        modal
+        :closable="true"
+        :dismissable-mask="true"
+        class="top-create-dialog"
+        :style="{ width: '40rem', maxWidth: '90vw', borderRadius: '1rem' }"
+        :pt="{
+          header:  { class: 'top-dialog-header' },
+          content: { class: 'top-dialog-content' },
+          footer:  { class: 'top-dialog-footer' }
+        }"
+      >
         <template #header>Create top-level Question</template>
-        <div>
+
+        <div class="top-create-body">
           <IftaLabel class="w-full">
             <InputText id="question" v-model="form.question" placeholder="Question" showClear fluid />
             <label for="question">Question</label>
           </IftaLabel>
+
           <IftaLabel class="w-full">
             <InputText id="source" v-model="form.source" placeholder="Source" showClear fluid />
             <label for="source">Source</label>
           </IftaLabel>
-          <div style="display: flex;">
-            <Chip v-for="answer in form.answers" :key="answer" :label="answer" removable
-              @remove="removeAnswer(answer)" />
+
+          <div class="top-answer-row">
+            <Chip
+              v-for="answer in form.answers"
+              :key="answer"
+              :label="answer"
+              removable
+              @remove="removeAnswer(answer)"
+            />
           </div>
-          <div style="display: flex;">
-            <InputText id="answer" v-model="form.answer" placeholder="Answer" showClear fluid />
+
+          <!-- Answer input + inline plus icon -->
+          <div class="top-answer-add">
+            <IftaLabel class="top-answer-field">
+              <InputText
+                id="answer"
+                v-model="form.answer"
+                placeholder="Answer"
+                showClear
+                fluid
+                @keyup.enter="createAnswer"
+              />
+              <label for="answer">Answer</label>
+
+              <Button
+                icon="pi pi-plus"
+                rounded
+                text
+                class="top-btn-inline"
+                v-tooltip.bottom="'Add Answer'"
+                @click="createAnswer"
+              />
+            </IftaLabel>
           </div>
-          <Button label="Add Answer" icon="pi pi-plus" @click="createAnswer" class="mr-2" />
-          <Button label="Create" icon="pi pi-check" @click="createQuestion" />
         </div>
+
+        <template #footer>
+          <div class="dialog-footer">
+            <Button label="Cancel" severity="secondary" @click="showCreateDialog = false" />
+            <Button label="Create" icon="pi pi-check" @click="createQuestion" />
+          </div>
+        </template>
       </Dialog>
 
-      <!-- Divider -->
+  <!-- Right placeholder section -->
       <Divider layout="vertical" class="form-divider" />
-
-      <!-- Right Section: Cases (1/3 width) - Placeholder -->
       <div class="cases-section">
         <div class="cases-placeholder">
           <h3>Cases</h3>
           <p class="placeholder-text">Case view will be imported here</p>
-          <!-- Cases component will be imported here later -->
         </div>
       </div>
     </div>
@@ -86,58 +158,48 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { onBeforeRouteLeave } from 'vue-router'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { storeToRefs } from 'pinia'
+
 import { useFormStore } from '@/stores/formStore'
 import { useQuestionStore } from '@/stores/questionStore'
+import { useCaseStore } from '@/stores/caseStore'
+
 import {
-  Card, Button, InputText, Textarea,
-  Checkbox, Message,
-  Skeleton, Divider,
-  Dialog,
-  SelectButton,
-  Chip,
-  IftaLabel
+  Button, InputText, Message, Skeleton, Divider, Dialog,
+  SelectButton, Chip, IftaLabel
 } from 'primevue'
 import Question from '@/components/Question.vue'
-import { useCaseStore } from '@/stores/caseStore'
 
 const route = useRoute()
 const router = useRouter()
+
 const formStore = useFormStore()
 const { forms } = storeToRefs(formStore)
+
 const questionStore = useQuestionStore()
 const { questions, isLoading, error, hasError } = storeToRefs(questionStore)
+
 const caseStore = useCaseStore()
 
-// Flatten all questions across forms for lookups (e.g., by questionId)
 const allQuestionsFlat = computed(() => Object.values(questions.value || {}).flat())
 
 const showCreateDialog = ref(false)
-const form = ref({
-  question: '',
-  answer: '',
-  answers: [],
-  source: ''
-})
+const form = ref({ question: '', answer: '', answers: [], source: '' })
 
 const formQuestions = computed(() => {
   const formId = route.params.id
   const list = (questions.value && questions.value[formId]) ? questions.value[formId] : []
   return list.filter(q => !q.parentQuestionId)
 })
-// Form state
-const formData = ref({})
-const fieldErrors = ref({})
+
 const isSubmitting = ref(false)
 const allowLeaving = ref(false)
 
-// Get current form
-const currentForm = computed(() => {
-  return formStore.forms[formStore.selectedTopicId].find(form => form.id === formStore.selectedFormId)
-})
+const currentForm = computed(() =>
+  formStore.forms[formStore.selectedTopicId].find(f => f.id === formStore.selectedFormId)
+)
 
 const createAnswer = () => {
   if (form.value.answer && !form.value.answers.includes(form.value.answer)) {
@@ -145,56 +207,32 @@ const createAnswer = () => {
     form.value.answer = ''
   }
 }
+const removeAnswer = (a) => (form.value.answers = form.value.answers.filter(x => x !== a))
 
-const removeAnswer = (answer) => {
-  form.value.answers = form.value.answers.filter(a => a !== answer)
-}
-
-// Browser beforeunload event - warns when closing tab/window
 const handleBeforeUnload = (e) => {
   if (!allowLeaving.value) {
     e.preventDefault()
-    e.returnValue = '' // Chrome requires returnValue to be set
-    return '' // Some browsers use the return value
+    e.returnValue = ''
+    return ''
   }
 }
 
-// Vue Router navigation guard - warns when navigating to another route
 onBeforeRouteLeave((to, from, next) => {
   if (!allowLeaving.value) {
-    const answer = window.confirm(
-      'Are you sure you want to leave this page?'
-    )
-    if (answer) {
-      next()
-    } else {
-      next(false)
-    }
+    const ok = window.confirm('Are you sure you want to leave this page?')
+    ok ? next() : next(false)
   } else {
     next()
   }
 })
 
 const loadForm = async () => {
-  if (forms.value.length === 0) {
-    await formStore.fetchForms()
-  }
+  if (forms.value.length === 0) await formStore.fetchForms()
 }
 
 const completeCase = async () => {
   try {
-    // Here you would submit the form data
-    // await api.post(`forms/${route.params.id}/submissions`, formData.value)
-
-    console.log('Form submitted:', formData.value)
-
-    // Allow leaving the page after successful submission (optional - remove if you want to keep prompting)
-    // allowLeaving.value = true
-
-    // Show success and redirect
     router.push('/form-select')
-  } catch (error) {
-    console.error('Failed to submit form:', error)
   } finally {
     isSubmitting.value = false
   }
@@ -203,14 +241,9 @@ const completeCase = async () => {
 onMounted(() => {
   loadForm()
   questionStore.fetchQuestionsForForm(route.params.id)
-  // Add browser beforeunload listener
   window.addEventListener('beforeunload', handleBeforeUnload)
 })
-
-onBeforeUnmount(() => {
-  // Clean up event listener
-  window.removeEventListener('beforeunload', handleBeforeUnload)
-})
+onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnload))
 
 const createQuestion = () => {
   if (!form.value.question || form.value.answers.length === 0) {
@@ -219,145 +252,75 @@ const createQuestion = () => {
   }
   questionStore.createQuestion(route.params.id, {
     text: form.value.question,
-    answerOptions: form.value.answers.map((ans) => ({ label: ans })),
+    answerOptions: form.value.answers.map(ans => ({ label: ans })),
     source: form.value.source,
     parentQuestionId: null,
     parentAnswerId: null
   })
-  // Reset form
-  form.value.question = ''
-  form.value.answers = []
+  form.value = { question: '', answer: '', answers: [], source: '' }
   showCreateDialog.value = false
 }
 </script>
 
 <style scoped>
-.form-view {
-  width: 100%;
-  padding: 2rem;
-}
+.form-view { width: 100%; padding: 2rem; }
+.form-header h1 { margin: 0 0 .5rem 0; }
+.form-header p { color: #6c757d; margin: 0; }
 
-.form-header h1 {
-  margin: 0 0 0.5rem 0;
-}
+/* Two columns */
+.form-layout { display: flex; gap: 2rem; min-height: 500px; }
+.form-section { flex: 2; min-width: 0; }
+.form-divider { margin: 0; }
+.cases-section { flex: 1; min-width: 250px; }
+.cases-placeholder { padding: 1rem; background: var(--p-surface-50); border-radius: 6px; height: 100%; }
+.cases-placeholder h3 { margin: 0 0 1rem 0; color: var(--p-primary-600); }
+.placeholder-text { color: #6c757d; font-style: italic; }
 
-.form-header p {
-  color: #6c757d;
-  margin: 0;
-}
+.loading { text-align: center; padding: 2rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.error-content { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.dynamic-form { margin-top: 0; }
+.form-group { margin-bottom: 1.5rem; }
 
-/* Two-column layout */
-.form-layout {
-  display: flex;
-  gap: 2rem;
-  min-height: 500px;
-}
+.form-actions { display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb; }
 
-/* Left section: Form (2/3 width) */
-.form-section {
-  flex: 2;
-  min-width: 0;
-  /* Prevents flex item from overflowing */
-}
+/* ====== Top-level create dialog: wider + three equal-length inputs + Answer inline plus icon ====== */
+.top-dialog-header { padding: 1.25rem 1.5rem .25rem; font-size: 1.25rem; font-weight: 700; }
+.top-dialog-content { padding: 1rem 1.5rem 1.25rem; }
+.top-dialog-footer { padding: .75rem 1.5rem; }
+.top-create-body { display: flex; flex-direction: column; gap: .75rem; }
 
-/* Divider styling */
-.form-divider {
-  margin: 0;
-}
+/* Make all three inputs 100% width */
+.top-create-dialog :deep(.p-inputtext),
+.top-create-dialog :deep(.p-inputwrapper),
+.top-create-dialog :deep(.p-inputtext-fluid) { width: 100%; }
 
-/* Right section: Cases (1/3 width) */
-.cases-section {
-  flex: 1;
-  min-width: 250px;
-}
+.top-answer-row { display: flex; flex-wrap: wrap; gap: .5rem; }
 
-.cases-placeholder {
-  padding: 1rem;
-  background: var(--p-surface-50);
-  border-radius: 6px;
-  height: 100%;
-}
+/* Answer row */
+.top-answer-add { width: 100%; }
+.top-answer-field { position: relative; display: block; width: 100%; }
+.top-answer-field :deep(.p-inputtext) { padding-right: 2.25rem !important; } /* Reserve space for plus icon */
 
-.cases-placeholder h3 {
-  margin: 0 0 1rem 0;
-  color: var(--p-primary-600);
+.top-btn-inline {
+  position: absolute;
+  right: .4rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  color: var(--text-color-secondary);
+  transition: color .2s, background-color .2s;
 }
+.top-btn-inline:hover { background: var(--surface-200); color: var(--text-color); }
 
-.placeholder-text {
-  color: #6c757d;
-  font-style: italic;
-}
-
-.loading {
-  text-align: center;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.error-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
-.dynamic-form {
-  margin-top: 0;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #374151;
-}
-
-.required {
-  color: #ef4444;
-}
-
-.checkbox-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.checkbox-group label {
-  margin-bottom: 0;
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.p-error {
-  display: block;
-  margin-top: 0.25rem;
-}
-
-/* Responsive: Stack on smaller screens */
+/* Fallback for small screens */
 @media (max-width: 1024px) {
-  .form-layout {
-    flex-direction: column;
-  }
-
-  .form-divider {
-    display: none;
-  }
-
-  .cases-section {
-    min-width: 100%;
-  }
+  .form-layout { flex-direction: column; }
+  .form-divider { display: none; }
+  .cases-section { min-width: 100%; }
+}
+@media (max-width: 480px) {
+  .top-dialog-header { padding: 1rem 1rem .25rem; }
+  .top-dialog-content { padding: .75rem 1rem 1rem; }
+  .top-dialog-footer { padding: .5rem 1rem; }
 }
 </style>
