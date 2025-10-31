@@ -51,13 +51,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { onBeforeRouteLeave } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useFormStore } from '@/stores/formStore'
+import { useQuestionStore } from '@/stores/questionStore'
 import {
   Card, Button, InputText, Textarea,
   Checkbox, Message,
   Skeleton, Divider
 } from 'primevue'
-import { useQuestionStore } from '@/stores/questionStore'
-import Question from '@/components/question.vue'
+import Question from '@/components/Question.vue'
 
 const route = useRoute()
 const router = useRouter()

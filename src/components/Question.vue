@@ -15,7 +15,7 @@
 
 <script setup>
 import { useCaseStore } from '@/stores/caseStore'
-import { UseQuestionStore } from '@/stores/question'
+import { useQuestionStore } from '@/stores/questionStore'
 import { Button, Card, SelectButton } from 'primevue'
 import { computed, onMounted, watch } from 'vue'
 
