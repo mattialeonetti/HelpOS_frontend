@@ -36,6 +36,22 @@ export const useFormStore = defineStore('form', {
       }
     },
 
+    async addTopic(topicData) {
+      try {
+        this.isLoading = true
+        this.error = null
+        const response = await api.post('/topics', topicData)
+        this.topics.push(response)
+        return response
+      } catch (err) {
+        this.error = err.message || 'Failed to add topic'
+        console.error('Failed to add topic:', err)
+        throw err
+      } finally {
+        this.isLoading = false
+      }
+    },
+
     async fetchFormsForTopic(topicId) {
       try {
         this.formsLoading = true
@@ -50,11 +66,11 @@ export const useFormStore = defineStore('form', {
       }
     },
 
-    async addForm(formData) {
+    async addForm(topicId,formData) {
       try {
         this.formsLoading = true
         this.error = null
-        const response = await api.post('forms', formData)
+        const response = await api.post(`/topics/${topicId}/forms`, formData)
         this.forms.push(response)
         return response
       } catch (err) {
