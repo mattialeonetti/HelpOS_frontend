@@ -32,6 +32,7 @@ export const useQuestionStore = defineStore('question', {
             this.isLoading = true
             this.error = null
             try {
+                console.log()
                 const response = await api.post(`/topics/${this.topicId}/forms/${formId}/questions${parentQuestionId ? `/${parentQuestionId}` : ''}`, questionData)
                 this.fetchQuestionsForForm(formId)
                 return response

@@ -40,7 +40,10 @@ export const useCaseStore = defineStore('case', {
             this.isLoading = true
             this.error = null
             try {
-                const response = await api.post(`/topics/${this.topicId}/forms/${this.formId}/runs/${this.caseRun.id}/`, answerData)
+                console.log(this.caseRun)
+                this.caseRun.steps.push(answerData)
+                const response = await api.put(`/topics/${this.topicId}/forms/${this.formId}/runs/${this.caseRun.id}`, this.caseRun)
+                await this.fetchCasesForForm()
                 this.caseRun = response
             } catch (err) {
                 this.error = err.message || 'Failed to submit case answer'
@@ -69,7 +72,7 @@ export const useCaseStore = defineStore('case', {
             this.isLoading = true
             this.error = null
             try {
-                const response = await api.get(`/topics/${this.topicId}/forms/${this.formId}/runs`)
+                const response = await api.get(`/topics/${this.topicId}/forms/${this.formId}/runs/${this.caseRun.id}/similar`)
                 this.cases = response
             } catch (err) {
                 this.error = err.message || 'Failed to fetch cases'

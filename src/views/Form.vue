@@ -1,7 +1,7 @@
 <template>
   <div class="form-view">
     <div class="form-layout">
-  <!-- Left: Form main section -->
+      <!-- Left: Form main section -->
       <div class="form-section">
         <div class="form-header">
           <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -18,77 +18,44 @@
         <Message v-else-if="hasError" severity="error" :closable="false">
           <div class="error-content">
             <p>{{ error }}</p>
-            <Button
-              label="Retry"
-              icon="pi pi-refresh"
-              @click="loadForm"
-              severity="secondary"
-              size="small"
-            />
+            <Button label="Retry" icon="pi pi-refresh" @click="loadForm" severity="secondary" size="small" />
           </div>
         </Message>
 
-        <form v-else class="dynamic-form">
+  <form v-else class="dynamic-form" @submit.prevent @keydown.enter.prevent>
           <div v-for="question in formQuestions" :key="question.id" class="form-group">
             <Question :questionId="question.id" />
           </div>
 
           <div class="form-actions">
-            <Button
-              type="submit"
-              icon="pi pi-check"
-              label="Finish Case"
-              @click="isSubmitting = true"
-            />
-            <Button
-              label="Cancel Case"
-              class="error"
-              icon="pi pi-arrow-left"
-              @click="$router.push('/form-select')"
-              severity="secondary"
-            />
+            <Button type="button" icon="pi pi-check" label="Finish Case" @click.prevent="openSubmitDialog" />
+            <Button label="Cancel Case" class="error" icon="pi pi-arrow-left" @click="$router.push('/form-select')"
+              severity="secondary" />
           </div>
         </form>
       </div>
 
-  <!-- Submission preview -->
-      <Dialog
-        v-model:visible="isSubmitting"
-        modal
-        :closable="false"
-        :dismissable-mask="false"
-        class="submission-dialog"
-      >
-        <div class="submission-content">
-          <div
-            v-for="answer in caseStore.caseRun.steps"
-            :key="answer.questionId"
-            class="answer-item"
-          >
-            <h3>{{ formStore.forms.find(f => f.id === answer.formId)?.title }}</h3>
-            <h4>{{ allQuestionsFlat.find(q => q.id === answer.questionId)?.text }}:</h4>
-            <p>{{ answer.answer }}</p>
-            <Divider />
-            <SelectButton label="Decision: " v-model="decision" :options="['Approve', 'Reject']" class="w-full" />
-            <Button label="Complete Case" @click="completeCase(answer)" />
+      <Dialog v-model:visible="isSubmitting" modal :closable="true" :dismissable-mask="true" class="submission-dialog">
+        <div style="display: flex; flex-direction: column;">
+          <h3>{{ currentForm.title }}</h3>
+          <div v-for="step in caseStore.caseRun.steps" :key="step.questionId" class="answer-item"
+            style="display: flex; align-items: center; justify-content: space-between;">
+            <p>{{allQuestionsFlat.find(q => q.id === step.questionId)?.text}}</p>
+            <p>{{ step.answer }}</p>
           </div>
+          <Divider />
+          <SelectButton label="Decision: " v-model="decision" :options="['approved', 'rejected']" class="w-full" />
+          <Button label="Complete Case" @click="completeCase(answer)" style="margin-top: 1em" />
         </div>
       </Dialog>
 
-  <!-- Top-level question creation (wider + three equal-length inputs + Answer inline on right + button) -->
-      <Dialog
-        v-model:visible="showCreateDialog"
-        modal
-        :closable="true"
-        :dismissable-mask="true"
-        class="top-create-dialog"
-        :style="{ width: '40rem', maxWidth: '90vw', borderRadius: '1rem' }"
-        :pt="{
-          header:  { class: 'top-dialog-header' },
+      <!-- Top-level question creation (wider + three equal-length inputs + Answer inline on right + button) -->
+      <Dialog v-model:visible="showCreateDialog" modal :closable="true" :dismissable-mask="true"
+        class="top-create-dialog" :style="{ width: '40rem', maxWidth: '90vw', borderRadius: '1rem' }" :pt="{
+          header: { class: 'top-dialog-header' },
           content: { class: 'top-dialog-content' },
-          footer:  { class: 'top-dialog-footer' }
-        }"
-      >
+          footer: { class: 'top-dialog-footer' }
+        }">
         <template #header>Create top-level Question</template>
 
         <div class="top-create-body">
@@ -103,36 +70,19 @@
           </IftaLabel>
 
           <div class="top-answer-row">
-            <Chip
-              v-for="answer in form.answers"
-              :key="answer"
-              :label="answer"
-              removable
-              @remove="removeAnswer(answer)"
-            />
+            <Chip v-for="answer in form.answers" :key="answer" :label="answer" removable
+              @remove="removeAnswer(answer)" />
           </div>
 
           <!-- Answer input + inline plus icon -->
           <div class="top-answer-add">
             <IftaLabel class="top-answer-field">
-              <InputText
-                id="answer"
-                v-model="form.answer"
-                placeholder="Answer"
-                showClear
-                fluid
-                @keyup.enter="createAnswer"
-              />
+              <InputText id="answer" v-model="form.answer" placeholder="Answer" showClear fluid
+                @keyup.enter="createAnswer" />
               <label for="answer">Answer</label>
 
-              <Button
-                icon="pi pi-plus"
-                rounded
-                text
-                class="top-btn-inline"
-                v-tooltip.bottom="'Add Answer'"
-                @click="createAnswer"
-              />
+              <Button icon="pi pi-plus" rounded text class="top-btn-inline" v-tooltip.bottom="'Add Answer'"
+                @click="createAnswer" />
             </IftaLabel>
           </div>
         </div>
@@ -145,12 +95,11 @@
         </template>
       </Dialog>
 
-  <!-- Right placeholder section -->
+      <!-- Right placeholder section -->
       <Divider layout="vertical" class="form-divider" />
       <div class="cases-section">
         <div class="cases-placeholder">
-          <h3>Cases</h3>
-          <p class="placeholder-text">Case view will be imported here</p>
+          <Cases />
         </div>
       </div>
     </div>
@@ -171,9 +120,9 @@ import {
   SelectButton, Chip, IftaLabel
 } from 'primevue'
 import Question from '@/components/Question.vue'
+import Cases from './Cases.vue'
 
 const route = useRoute()
-const router = useRouter()
 
 const formStore = useFormStore()
 const { forms } = storeToRefs(formStore)
@@ -195,6 +144,7 @@ const formQuestions = computed(() => {
 })
 
 const isSubmitting = ref(false)
+const decision = ref(null)
 const allowLeaving = ref(false)
 
 const currentForm = computed(() =>
@@ -232,10 +182,19 @@ const loadForm = async () => {
 
 const completeCase = async () => {
   try {
-    router.push('/form-select')
+    await caseStore.closeCaseRun()
+    allowLeaving.value = true
+    route.push('/form-select')
+  } catch (error) {
+    console.error('Failed to submit form:', error)
   } finally {
     isSubmitting.value = false
   }
+}
+
+const openSubmitDialog = () => {
+  console.log('Opening submit dialog')
+  isSubmitting.value = true
 }
 
 onMounted(() => {
@@ -263,43 +222,140 @@ const createQuestion = () => {
 </script>
 
 <style scoped>
-.form-view { width: 100%; padding: 2rem; }
-.form-header h1 { margin: 0 0 .5rem 0; }
-.form-header p { color: #6c757d; margin: 0; }
+.form-view {
+  width: 100%;
+  padding: 2rem;
+}
+
+.form-header h1 {
+  margin: 0 0 .5rem 0;
+}
+
+.form-header p {
+  color: #6c757d;
+  margin: 0;
+}
 
 /* Two columns */
-.form-layout { display: flex; gap: 2rem; min-height: 500px; }
-.form-section { flex: 2; min-width: 0; }
-.form-divider { margin: 0; }
-.cases-section { flex: 1; min-width: 250px; }
-.cases-placeholder { padding: 1rem; background: var(--p-surface-50); border-radius: 6px; height: 100%; }
-.cases-placeholder h3 { margin: 0 0 1rem 0; color: var(--p-primary-600); }
-.placeholder-text { color: #6c757d; font-style: italic; }
+.form-layout {
+  display: flex;
+  gap: 2rem;
+  min-height: 500px;
+}
 
-.loading { text-align: center; padding: 2rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-.error-content { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-.dynamic-form { margin-top: 0; }
-.form-group { margin-bottom: 1.5rem; }
+.form-section {
+  flex: 2;
+  min-width: 0;
+}
 
-.form-actions { display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb; }
+.form-divider {
+  margin: 0;
+}
+
+.cases-section {
+  flex: 1;
+  min-width: 250px;
+}
+
+.cases-placeholder {
+  padding: 1rem;
+  background: var(--p-surface-50);
+  border-radius: 6px;
+  height: 100%;
+}
+
+.cases-placeholder h3 {
+  margin: 0 0 1rem 0;
+  color: var(--p-primary-600);
+}
+
+.placeholder-text {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.error-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dynamic-form {
+  margin-top: 0;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
 
 /* ====== Top-level create dialog: wider + three equal-length inputs + Answer inline plus icon ====== */
-.top-dialog-header { padding: 1.25rem 1.5rem .25rem; font-size: 1.25rem; font-weight: 700; }
-.top-dialog-content { padding: 1rem 1.5rem 1.25rem; }
-.top-dialog-footer { padding: .75rem 1.5rem; }
-.top-create-body { display: flex; flex-direction: column; gap: .75rem; }
+.top-dialog-header {
+  padding: 1.25rem 1.5rem .25rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.top-dialog-content {
+  padding: 1rem 1.5rem 1.25rem;
+}
+
+.top-dialog-footer {
+  padding: .75rem 1.5rem;
+}
+
+.top-create-body {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
 
 /* Make all three inputs 100% width */
 .top-create-dialog :deep(.p-inputtext),
 .top-create-dialog :deep(.p-inputwrapper),
-.top-create-dialog :deep(.p-inputtext-fluid) { width: 100%; }
+.top-create-dialog :deep(.p-inputtext-fluid) {
+  width: 100%;
+}
 
-.top-answer-row { display: flex; flex-wrap: wrap; gap: .5rem; }
+.top-answer-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
 
 /* Answer row */
-.top-answer-add { width: 100%; }
-.top-answer-field { position: relative; display: block; width: 100%; }
-.top-answer-field :deep(.p-inputtext) { padding-right: 2.25rem !important; } /* Reserve space for plus icon */
+.top-answer-add {
+  width: 100%;
+}
+
+.top-answer-field {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.top-answer-field :deep(.p-inputtext) {
+  padding-right: 2.25rem !important;
+}
+
+/* Reserve space for plus icon */
 
 .top-btn-inline {
   position: absolute;
@@ -310,17 +366,37 @@ const createQuestion = () => {
   color: var(--text-color-secondary);
   transition: color .2s, background-color .2s;
 }
-.top-btn-inline:hover { background: var(--surface-200); color: var(--text-color); }
+
+.top-btn-inline:hover {
+  background: var(--surface-200);
+  color: var(--text-color);
+}
 
 /* Fallback for small screens */
 @media (max-width: 1024px) {
-  .form-layout { flex-direction: column; }
-  .form-divider { display: none; }
-  .cases-section { min-width: 100%; }
+  .form-layout {
+    flex-direction: column;
+  }
+
+  .form-divider {
+    display: none;
+  }
+
+  .cases-section {
+    min-width: 100%;
+  }
 }
+
 @media (max-width: 480px) {
-  .top-dialog-header { padding: 1rem 1rem .25rem; }
-  .top-dialog-content { padding: .75rem 1rem 1rem; }
-  .top-dialog-footer { padding: .5rem 1rem; }
+  .top-dialog-header {
+    padding: 1rem 1rem .25rem;
+  }
+
+  .top-dialog-content {
+    padding: .75rem 1rem 1rem;
+  }
+
+  .top-dialog-footer {
+    padding: .5rem 1rem; }
 }
 </style>

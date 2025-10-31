@@ -47,6 +47,7 @@
             :options="selectOptions"
             optionLabel="label"
             optionValue="value"
+            @update:modelValue="updateChoice"
             :pt="{ root: { class: 'q-select-root' }, button: { class: 'q-select-btn' } }"
           />
         </div>
@@ -195,15 +196,17 @@ const createSubQuestion = () => {
     source: form.value.source
   })
   form.value = { question: '', answer: '', answers: [], source: '' }
+
   selectedOptionForCreate.value = null
   showCreateDialog.value = false
 }
 
-watch(selectedOptionId, (newValue) => {
-  if (newValue != null) {
-    caseStore.submitCaseAnswer({ questionId: props.questionId, answerOptionId: newValue })
-  }
-})
+
+const updateChoice = async (newValue) => {
+  console.log('Selected option changed:', newValue)
+  await caseStore.submitCaseAnswer({ questionId: props.questionId, answerOptionId: newValue })
+  console.log('Current case run:', caseStore.caseRun)
+}
 </script>
 
 <style scoped>
