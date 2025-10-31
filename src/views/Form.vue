@@ -38,13 +38,17 @@
       <Dialog v-model:visible="isSubmitting" modal :closable="true" :dismissable-mask="true" class="submission-dialog">
         <div style="display: flex; flex-direction: column;">
           <h3>{{ currentForm.title }}</h3>
-          <div v-for="step in caseStore.caseRun.steps" :key="step.questionId" class="answer-item"
-            style="display: flex; align-items: center; justify-content: space-between;">
+          <div v-for="step in caseStore.caseRun.steps" :key="step.questionId">
+            <Divider />
             <p>{{allQuestionsFlat.find(q => q.id === step.questionId)?.text}}</p>
-            <p>{{ step.answer }}</p>
+            <Chip class="answer-item">{{ step.answer }}</Chip>
           </div>
           <Divider />
           <SelectButton label="Decision: " v-model="decision" :options="['approved', 'rejected']" class="w-full" />
+          <IftaLabel class="w-full" style="margin-top: 1em">
+            <InputText id="notes" v-model="form.notes" placeholder="Notes" showClear fluid />
+            <label for="notes">Notes</label>
+          </IftaLabel>
           <Button label="Complete Case" @click="completeCase()" style="margin-top: 1em" />
         </div>
       </Dialog>
@@ -136,7 +140,7 @@ const caseStore = useCaseStore()
 const allQuestionsFlat = computed(() => Object.values(questions.value || {}).flat())
 
 const showCreateDialog = ref(false)
-const form = ref({ question: '', answer: '', answers: [], source: '' })
+const form = ref({ question: '', answer: '', answers: [], source: '', notes: '' })
 
 const formQuestions = computed(() => {
   const formId = route.params.id
@@ -183,9 +187,13 @@ const loadForm = async () => {
 
 const completeCase = async () => {
   try {
-  await caseStore.closeCaseRun(decision.value)
-  allowLeaving.value = true
-  await router.push('/form-select')
+    if (!decision.value) {
+      alert('Please select a decision before completing the case.')
+      return
+    }
+    await caseStore.closeCaseRun(decision.value, form.value.notes)
+    allowLeaving.value = true
+    await router.push('/form-select')
   } catch (error) {
     console.error('Failed to submit form:', error)
   } finally {
@@ -251,6 +259,10 @@ const createQuestion = () => {
 
 .form-divider {
   margin: 0;
+}
+
+.answer-item {
+  margin-top: 2px;
 }
 
 .cases-section {

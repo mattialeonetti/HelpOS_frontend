@@ -43,8 +43,8 @@ export const useCaseStore = defineStore('case', {
                 console.log(this.caseRun)
                 this.caseRun.steps.push(answerData)
                 const response = await api.put(`/topics/${this.topicId}/forms/${this.formId}/runs/${this.caseRun.id}`, this.caseRun)
-                await this.fetchCasesForForm()
                 this.caseRun = response
+                await this.fetchCasesForForm()
             } catch (err) {
                 this.error = err.message || 'Failed to submit case answer'
                 console.error('Failed to submit case answer:', err)
@@ -54,10 +54,11 @@ export const useCaseStore = defineStore('case', {
             }
         },
 
-        async closeCaseRun(outcome) {
+        async closeCaseRun(outcome, closureNotes = null) {
             this.isLoading = true
             this.error = null
             try {
+                this.caseRun.closureNotes = closureNotes
                 this.caseRun.outcome = outcome
                 const response = await api.post(`/topics/${this.topicId}/forms/${this.formId}/runs/${this.caseRun.id}/close`, this.caseRun)
                 this.caseRun = response

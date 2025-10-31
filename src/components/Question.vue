@@ -1,77 +1,44 @@
 <template>
   <!-- Add is-nested class by level to enable sub-question visual style -->
-  <div
-    class="question"
-    :class="{ 'is-nested': subQuestionLevel > 0 }"
-    :style="{ '--sub-question-level': subQuestionLevel }"
-  >
-    <Card
-      class="q-card"
-      :pt="{
-        root:    { class: 'q-card-root' },
-        body:    { class: 'q-card-body p-0' },
-        title:   { class: 'q-inset-x' },      // Unified left/right padding for title and content (PT)
-        content: { class: 'q-inset-x' }
-      }"
-    >
-  <!-- Title section -->
+  <div class="question" :class="{ 'is-nested': subQuestionLevel > 0 }"
+    :style="{ '--sub-question-level': subQuestionLevel }">
+    <Card class="q-card" :pt="{
+      root: { class: 'q-card-root' },
+      body: { class: 'q-card-body p-0' },
+      title: { class: 'q-inset-x' },      // Unified left/right padding for title and content (PT)
+      content: { class: 'q-inset-x' }
+    }">
+      <!-- Title section -->
       <template #title>
         <div class="q-head">
           <h3 class="q-title">{{ question?.text }}</h3>
           <div class="q-actions">
-            <Button
-              icon="pi pi-plus"
-              rounded
-              text
-              @click="showCreateDialog = true"
-              v-tooltip.bottom="'Add Sub-Question'"
-            />
-            <Button
-              icon="pi pi-external-link"
-              rounded
-              text
-              :disabled="!question?.source"
-              :url="question?.source"
-              target="_blank"
-              v-tooltip.bottom="'Open source'"
-            />
+            <Button icon="pi pi-plus" rounded text @click="showCreateDialog = true"
+              v-tooltip.bottom="'Add Sub-Question'" />
+            <Button icon="pi pi-external-link" rounded text :disabled="!question?.source" :url="question?.source"
+              target="_blank" v-tooltip.bottom="'Open source'" />
           </div>
         </div>
       </template>
 
-  <!-- Content section -->
+      <!-- Content section -->
       <template #content>
         <div class="q-content">
-          <SelectButton
-            v-model="selectedOptionId"
-            :options="selectOptions"
-            optionLabel="label"
-            optionValue="value"
+          <SelectButton v-model="selectedOptionId" :options="selectOptions" optionLabel="label" optionValue="value"
             @update:modelValue="updateChoice"
-            :pt="{ root: { class: 'q-select-root' }, button: { class: 'q-select-btn' } }"
-          />
+            :pt="{ root: { class: 'q-select-root' }, button: { class: 'q-select-btn' } }" />
         </div>
       </template>
     </Card>
 
-  <!-- Create sub-question dialog -->
-    <Dialog
-      v-model:visible="showCreateDialog"
-      modal
-      header="Create Sub-Question"
-      class="q-dialog"
-      :style="{ width: '32rem' }"
-    >
+    <!-- Create sub-question dialog -->
+    <Dialog v-model:visible="showCreateDialog" modal header="Create Sub-Question" class="q-dialog"
+      :style="{ width: '32rem' }">
       <div class="q-dialog-body">
         <p class="q-dialog-hint">Select the gating answer and define a sub-question below.</p>
 
-        <SelectButton
-          v-model="selectedOptionForCreate"
-          :options="selectOptions"
-          optionLabel="label"
-          optionValue="value"
-          :pt="{ root: { class: 'q-select-root' }, button: { class: 'q-select-btn' } }"
-        />
+        <SelectButton v-model="selectedOptionForCreate" :options="selectOptions" optionLabel="label" optionValue="value"
+          :pt="{ root: { class: 'q-select-root' }, button: { class: 'q-select-btn' } }" />
 
         <IftaLabel class="w-full">
           <InputText id="question" v-model="form.question" placeholder="Question" showClear fluid />
@@ -84,35 +51,17 @@
         </IftaLabel>
 
         <div class="q-answer-row">
-          <Chip
-            v-for="answer in form.answers"
-            :key="answer"
-            :label="answer"
-            removable
-            @remove="removeAnswer(answer)"
-          />
+          <Chip v-for="answer in form.answers" :key="answer" :label="answer" removable @remove="removeAnswer(answer)" />
         </div>
 
-  <!-- Answer input box + inline “+” button -->
+        <!-- Answer input box + inline “+” button -->
         <div class="q-answer-add">
           <IftaLabel class="flex-1 q-answer-field">
-            <InputText
-              id="answer"
-              v-model="form.answer"
-              placeholder="Answer"
-              showClear
-              fluid
-              @keyup.enter="createAnswer"
-            />
+            <InputText id="answer" v-model="form.answer" placeholder="Answer" showClear fluid
+              @keyup.enter="createAnswer" />
             <label for="answer">Answer</label>
-            <Button
-              icon="pi pi-plus"
-              rounded
-              text
-              class="q-btn-inline"
-              v-tooltip.bottom="'Add Answer'"
-              @click="createAnswer"
-            />
+            <Button icon="pi pi-plus" rounded text class="q-btn-inline" v-tooltip.bottom="'Add Answer'"
+              @click="createAnswer" />
           </IftaLabel>
         </div>
       </div>
@@ -125,13 +74,9 @@
       </template>
     </Dialog>
 
-  <!-- Sub-question recursion -->
-    <Question
-      v-for="subQuestion in subQuestions"
-      :key="subQuestion.id"
-      :questionId="subQuestion.id"
-      :sub-question-level="subQuestionLevel + 1"
-    />
+    <!-- Sub-question recursion -->
+    <Question v-for="subQuestion in subQuestions" :key="subQuestion.id" :questionId="subQuestion.id"
+      :sub-question-level="subQuestionLevel + 1" />
   </div>
 </template>
 
@@ -203,37 +148,49 @@ const createSubQuestion = () => {
 
 
 const updateChoice = async (newValue) => {
+  console.log(allQuestionsFlat.value.find(q => q.id === props.questionId).answerOptions)
   console.log('Selected option changed:', newValue)
-  await caseStore.submitCaseAnswer({ questionId: props.questionId, answerOptionId: newValue })
+  const answer = question.value.answerOptions.find(opt => opt.id === newValue)
+  console.log(answer)
+  await caseStore.submitCaseAnswer({ questionId: props.questionId, answer: answer.label })
   console.log('Current case run:', caseStore.caseRun)
 }
 </script>
 
 <style scoped>
-:root{
-  --q-inset-x: 1.5rem;          /* Align title/content left and right */
-  --indent-step: 1.25rem;       /* Indent per level */
+:root {
+  --q-inset-x: 1.5rem;
+  /* Align title/content left and right */
+  --indent-step: 1.25rem;
+  /* Indent per level */
   --accent-color: var(--primary-500);
 }
 
 /* Outer container: indent by level */
-.question{
+.question {
   position: relative;
   width: 100%;
   margin-bottom: 1.25rem;
   padding-left: calc(var(--indent-step) * var(--sub-question-level, 0));
   transition: all .2s ease;
 }
-.question.is-nested{ margin-top: .5rem; }
+
+.question.is-nested {
+  margin-top: .5rem;
+}
 
 /* Card appearance + PT alignment (title/content) */
-.q-card-root{
+.q-card-root {
   position: relative;
   border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .06);
 }
-.q-card-body{ padding: 0; }
-:deep(.q-inset-x){
+
+.q-card-body {
+  padding: 0;
+}
+
+:deep(.q-inset-x) {
   padding-left: var(--q-inset-x);
   padding-right: var(--q-inset-x);
 }
@@ -241,17 +198,19 @@ const updateChoice = async (newValue) => {
 /* ========= Use only color/width to visually weaken "affiliation" ========= */
 
 /* Sub-level slightly narrower (shrink by 8px per level, max 24px) + lighter background + lighter shadow */
-.question.is-nested .q-card-root{
+.question.is-nested .q-card-root {
   width: calc(100% - min(24px, 8px * var(--sub-question-level)));
   background: var(--surface-50);
-  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
 }
 
 /* Left color bar (opacity increases with level) */
-.question.is-nested .q-card-root::before{
+.question.is-nested .q-card-root::before {
   content: "";
   position: absolute;
-  left: 0; top: 0; bottom: 0;
+  left: 0;
+  top: 0;
+  bottom: 0;
   width: 4px;
   border-top-left-radius: 10px;
   border-bottom-left-radius: 10px;
@@ -260,35 +219,95 @@ const updateChoice = async (newValue) => {
 }
 
 /* Title row and "secondary" title */
-.q-head{ display:flex; justify-content:space-between; align-items:center; }
-.q-title{ margin:0; font-size:1.1rem; font-weight:700; }
-.question.is-nested .q-title{
+.q-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.q-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.question.is-nested .q-title {
   font-size: 1rem;
   color: var(--text-color-secondary);
 }
 
 /* Option button group (keep original style) */
-.q-select-root{ display:flex; flex-wrap:wrap; gap:.5rem; }
-.q-select-btn{ border-radius:9999px !important; padding:.4rem .9rem !important; font-size:.95rem; }
+.q-select-root {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.q-select-btn {
+  border-radius: 9999px !important;
+  padding: .4rem .9rem !important;
+  font-size: .95rem;
+}
 
 /* Dialog layout (keep original style) */
-.q-dialog-body{ display:flex; flex-direction:column; gap:.75rem; }
-.q-dialog-hint{ font-size:.85rem; color: var(--text-color-secondary); }
-.q-answer-row{ display:flex; flex-wrap:wrap; gap:.5rem; }
-.q-dialog-footer{ display:flex; justify-content:flex-end; gap:.5rem; }
+.q-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.q-dialog-hint {
+  font-size: .85rem;
+  color: var(--text-color-secondary);
+}
+
+.q-answer-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.q-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+}
 
 /* Answer input + inline “+” button */
-.q-answer-add{ display:flex; align-items:center; gap:0; margin-top:.25rem; }
-.q-answer-field{ position:relative; width:100%; }
-.q-btn-inline{
-  position:absolute; right:.4rem; top:50%; transform:translateY(-50%);
-  z-index:2; color: var(--text-color-secondary);
+.q-answer-add {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: .25rem;
 }
-.q-btn-inline:hover{ background: var(--surface-200); color: var(--text-color); }
-.q-answer-field :deep(.p-inputtext){ padding-right:2.2rem !important; }
+
+.q-answer-field {
+  position: relative;
+  width: 100%;
+}
+
+.q-btn-inline {
+  position: absolute;
+  right: .4rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  color: var(--text-color-secondary);
+}
+
+.q-btn-inline:hover {
+  background: var(--surface-200);
+  color: var(--text-color);
+}
+
+.q-answer-field :deep(.p-inputtext) {
+  padding-right: 2.2rem !important;
+}
 
 /* Responsive: slightly reduce indent to avoid excessive compression on small screens */
-@media (max-width: 768px){
-  :root{ --indent-step: 1rem; }
+@media (max-width: 768px) {
+  :root {
+    --indent-step: 1rem;
+  }
 }
 </style>

@@ -12,44 +12,25 @@
         </div>
         <div v-else class="cases">
             <h3>Exact matches</h3>
-            <div v-for="caseItem in exactMatches" :key="caseItem.id" class="case-item">
+            <Card v-for="caseItem in caseStore.cases" :key="caseItem.id" class="case-item">
                 <div style="display: flex; align-items: center; justify-content: space-between;">
                     <h4>{{ caseItem.title }}</h4>
                     <i v-if="caseItem.outcome === 'accepted'" class="pi pi-check-circle" style="color: green;"></i>
                     <i v-else-if="caseItem.outcome === 'rejected'" class="pi pi-times-circle" style="color: red;"></i>
                 </div>
                 <p>{{ caseItem.closureNotes }}</p>
-            </div>
-            <Divider v-if="inexactMatches.length > 0" />
-            <div v-if="inexactMatches.length > 0">
-                <h3>Inexact matches</h3>
-                <div v-for="caseItem in inexactMatches" :key="caseItem.id" class="case-item">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <h4>{{ caseItem.title }}</h4>
-                        <i v-if="caseItem.outcome === 'accepted'" class="pi pi-check-circle" style="color: green;"></i>
-                        <i v-else-if="caseItem.outcome === 'rejected'" class="pi pi-times-circle"
-                            style="color: red;"></i>
-                    </div>
-                    <p>{{ caseItem.closureNotes }}</p>
-                </div>
-            </div>
+            </Card>
         </div>
     </div>
 </template>
 <script setup>
 import { useCaseStore } from '@/stores/caseStore';
-import { Divider, Skeleton } from 'primevue';
+import { Card, Divider, Skeleton } from 'primevue';
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 
 const caseStore = useCaseStore();
 
-const exactMatches = computed(() => {
-    return caseStore.cases.filter(c => c.caseSteps.every(step =>
-        caseStore.caseRun.find(cs => cs.questionId === step.questionId)?.answer === step.answer
-    ));
+onMounted(() => {
+    console.log(caseStore.cases);
 });
-const inexactMatches = computed(() => {
-    return caseStore.cases.filter(c => !exactMatches.value.includes(c));
-});
-
 </script>
