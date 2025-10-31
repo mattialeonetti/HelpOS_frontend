@@ -98,11 +98,12 @@ import { storeToRefs } from 'pinia'
 import { useFormStore } from '@/stores/formStore'
 import { Card, Button, Message, Skeleton, Accordion, AccordionPanel, AccordionHeader, AccordionContent, Dialog, InputText, IftaLabel } from 'primevue'
 import { useCaseStore } from '@/stores/caseStore'
-import { useQuestionStore } from '@/stores/questionStore' // 保持原有导入
+import { useProfileStore } from '@/stores/profileStore'
 
 const router = useRouter()
 const formStore = useFormStore()
 const caseStore = useCaseStore()
+const profileStore = useProfileStore()
 const { topics, forms, isLoading, error, hasError } = storeToRefs(formStore)
 
 const activeAccordionIndex = ref([])
@@ -115,7 +116,7 @@ const createFormDescription = ref('')
 const createFormTopicId = ref(null)
 
 const selectForm = async (topicId, formId) => {
-  await caseStore.startCaseRun(topicId, formId)
+  await caseStore.startCaseRun(topicId, formId, profileStore.profile.id)
   router.push(`/form/${formId}`)
 }
 

@@ -1,6 +1,7 @@
 <template>
   <div class="case-profile">
-    <Card>
+    <Skeleton v-if="isLoading" width="100%" height="3rem" />
+    <Card v-else>
       <template #title>
         <h3 class="card-title">Case Profile</h3>
       </template>
@@ -15,26 +16,14 @@
               <div class="name-row">
                 <div class="name-col">
                   <IftaLabel class="w-full">
-                    <InputText
-                      id="firstName"
-                      v-model="form.firstName"
-                      placeholder="First Name"
-                      showClear
-                      fluid
-                    />
+                    <InputText id="firstName" v-model="form.firstName" placeholder="First Name" showClear fluid />
                     <label for="firstName">First Name</label>
                   </IftaLabel>
                 </div>
 
                 <div class="name-col">
                   <IftaLabel class="w-full">
-                    <InputText
-                      id="lastName"
-                      v-model="form.lastName"
-                      placeholder="Last Name"
-                      showClear
-                      fluid
-                    />
+                    <InputText id="lastName" v-model="form.lastName" placeholder="Last Name" showClear fluid />
                     <label for="lastName">Last Name</label>
                   </IftaLabel>
                 </div>
@@ -43,30 +32,15 @@
 
             <!-- Gender -->
             <div class="p-field p-col-12">
-              <SelectButton
-                v-model="form.gender"
-                :options="genderOptions"
-                optionLabel="label"
-                optionValue="value"
-                :allowEmpty="false"
-                aria-label="Select gender"
-                class="w-full"
-              />
+              <SelectButton v-model="form.gender" :options="genderOptions" optionLabel="label" optionValue="value"
+                :allowEmpty="false" aria-label="Select biological sex" class="w-full" />
             </div>
 
             <!-- Country -->
             <div class="p-field p-col-12">
               <IftaLabel class="w-full">
-                <Dropdown
-                  id="country"
-                  v-model="form.country"
-                  :options="countries"
-                  optionLabel="name"
-                  dataKey="code"
-                  placeholder="Select a Country"
-                  showClear
-                  fluid
-                >
+                <Dropdown id="country" v-model="form.country" :options="countries" optionLabel="name" dataKey="code"
+                  placeholder="Select a Country" showClear fluid>
                   <!-- selected value -->
                   <template #value="slotProps">
                     <div v-if="slotProps.value" class="flex items-center">
@@ -91,13 +65,7 @@
             <!-- Contact -->
             <div class="p-field p-col-12">
               <IftaLabel class="w-full">
-                <InputText
-                  id="contact"
-                  v-model="form.contact"
-                  placeholder="email@example.org"
-                  showClear
-                  fluid
-                />
+                <InputText id="contact" v-model="form.contact" placeholder="email@example.org" showClear fluid />
                 <label for="contact">Contact (optional)</label>
               </IftaLabel>
             </div>
@@ -105,13 +73,8 @@
 
           <!-- Confirm Button -->
           <div class="actions">
-            <Button
-              label="Confirm and Continue"
-              icon="pi pi-check"
-              class="p-button-lg p-button-primary"
-              :disabled="!canContinue"
-              @click="goToNext"
-            />
+            <Button label="Confirm and Continue" icon="pi pi-check" class="p-button-lg p-button-primary"
+              :disabled="!canContinue" @click="goToNext" />
           </div>
         </div>
       </template>
@@ -133,9 +96,11 @@ import IftaLabel from 'primevue/iftalabel'
 
 // Your store
 import { useProfileStore } from '@/stores/profileStore'
+import { Skeleton } from 'primevue'
 
 const router = useRouter()
 const profileStore = useProfileStore()
+const isLoading = computed(() => profileStore.isLoading)
 
 // form state
 const form = ref({
@@ -183,13 +148,13 @@ const canContinue = computed(() =>
 )
 
 // next page
-function goToNext() {
+async function goToNext() {
   const fullName = `${form.value.firstName} ${form.value.lastName}`.trim()
-  profileStore.postProfile({
+  await profileStore.postProfile({
     name: fullName,
-    gender: form.value.gender,
+    biologicalSex: form.value.gender,
     country: form.value.country.name,
-    countryCode: form.value.country.code,
+    countryRequested: form.value.country.code,
     contact: form.value.contact
   })
   router.push({ name: 'FormSelect' })
@@ -213,6 +178,7 @@ function goToNext() {
   display: flex;
   gap: 1.5rem;
 }
+
 .name-col {
   flex: 1;
 }
@@ -227,6 +193,7 @@ function goToNext() {
   display: flex;
   gap: 0.5rem;
 }
+
 :deep(.p-selectbutton .p-button) {
   flex: 1;
   padding: 0.6rem 1rem;
@@ -263,7 +230,4 @@ function goToNext() {
   text-align: center;
   margin: 0;
 }
-
 </style>
-
-

@@ -7,16 +7,12 @@ export const useProfileStore = defineStore('profile', {
     isLoading: false,
     error: null
   }),
-  getters: {
-    isLoading: (state) => state.isLoading,
-    getError: (state) => state.error
-  },
   actions: {
     async postProfile(profileData) {
+      this.isLoading = true
       try {
-        this.isLoading = true
         const response = await api.post('/profile', profileData)
-        this.profile = response.data
+        this.profile = response
       } catch (error) {
         this.error = error
       } finally {
