@@ -202,7 +202,6 @@ const completeCase = async () => {
 }
 
 const openSubmitDialog = () => {
-  console.log('Opening submit dialog')
   isSubmitting.value = true
 }
 

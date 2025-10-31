@@ -40,7 +40,6 @@ export const useCaseStore = defineStore('case', {
             this.isLoading = true
             this.error = null
             try {
-                console.log(this.caseRun)
                 this.caseRun.steps.push(answerData)
                 const response = await api.put(`/topics/${this.topicId}/forms/${this.formId}/runs/${this.caseRun.id}`, this.caseRun)
                 this.caseRun = response

@@ -148,12 +148,8 @@ const createSubQuestion = () => {
 
 
 const updateChoice = async (newValue) => {
-  console.log(allQuestionsFlat.value.find(q => q.id === props.questionId).answerOptions)
-  console.log('Selected option changed:', newValue)
   const answer = question.value.answerOptions.find(opt => opt.id === newValue)
-  console.log(answer)
   await caseStore.submitCaseAnswer({ questionId: props.questionId, answer: answer.label })
-  console.log('Current case run:', caseStore.caseRun)
 }
 </script>
 
