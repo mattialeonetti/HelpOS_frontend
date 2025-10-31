@@ -6,8 +6,7 @@
       </template>
       <template #content>
         <div v-if="isLoading" class="loading">
-          <ProgressSpinner />
-          <p>Loading forms...</p>
+          <Skeleton width="50%" height="2rem" />
         </div>
         
         <Message v-else-if="hasError" severity="error" :closable="false">
@@ -16,7 +15,7 @@
             <Button 
               label="Retry" 
               icon="pi pi-refresh" 
-              @click="formStore.fetchForms()" 
+              @click="formStore.fetchTopics()" 
               severity="secondary"
               size="small"
             />
@@ -24,37 +23,29 @@
         </Message>
         
         <div v-else class="forms-grid">
-          <Card 
-            v-for="form in forms" 
-            :key="form.id" 
-            class="form-card"
-            @click="selectForm(form.id)"
-          >
-            <template #title>
-              <h3>{{ form.title }}</h3>
-            </template>
-            <template #content>
-              <p>{{ form.description }}</p>
-            </template>
-            <template #footer>
-              <div class="form-meta">
-                <Tag :value="form.type" severity="info" />
-                <span class="form-duration">
-                  <i class="pi pi-clock"></i>
-                  {{ form.estimatedTime }}min
-                </span>
+          <Accordion>
+            <AccordionTab 
+              v-for="topic in topics" 
+              :key="topic.id"
+              :header="topic.title"
+            >
+              <div class="forms-grid">
+                <Card 
+                  v-for="form in forms[topic.id]" 
+                  :key="form.id" 
+                  class="form-card"
+                  @click="selectForm(topic.id, form.id)"
+                >
+                  <template #title>
+                    <h3>{{ form.title }}</h3>
+                  </template>
+                  <template #content>
+                    <p>{{ form.description }}</p>
+                  </template>
+                </Card>
               </div>
-            </template>
-          </Card>
-        </div>
-        
-        <div class="actions">
-          <Button 
-            label="Back to Case Profile" 
-            icon="pi pi-arrow-left" 
-            @click="$router.push('/case-profile')"
-            severity="secondary"
-          />
+            </AccordionTab>
+          </Accordion>
         </div>
       </template>
     </Card>
@@ -66,18 +57,24 @@ import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useFormStore } from '@/stores/formStore'
-import { Card, Button, Message, ProgressSpinner, Tag } from 'primevue'
+import { Card, Button, Message, Skeleton } from 'primevue'
+import { useCaseStore } from '@/stores/caseStore'
 
 const router = useRouter()
 const formStore = useFormStore()
-const { forms, isLoading, error, hasError } = storeToRefs(formStore)
+const caseStore = useCaseStore()
+const { topics, forms, isLoading, error, hasError } = storeToRefs(formStore)
 
-const selectForm = (formId) => {
-  router.push(`/form/${formId}`)
+const selectForm = (topicId, formId) => {
+ caseStore.startCaseRun(topicId, formId)
+  router.push(`/topics/${topicId}/form/${formId}`)
 }
 
 onMounted(() => {
-  formStore.fetchForms()
+  formStore.fetchTopics()
+  for (const topic of topics.value) {
+    formStore.fetchFormsForTopic(topic.id)
+  }
 })
 </script>
 
@@ -145,5 +142,8 @@ onMounted(() => {
 
 .actions {
   margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>

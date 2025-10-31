@@ -67,7 +67,7 @@ body {
   gap: 0.5rem;
   font-size: 1.25rem;
   font-weight: bold;
-  color: var(--primary-color);
+  color: var(--p-primary-600);
   text-decoration: none;
   padding: 0.5rem 1rem;
   border-radius: 6px;
@@ -75,7 +75,8 @@ body {
 }
 
 .nav-brand a:hover {
-  background-color: var(--surface-100);
+  background-color: var(--p-surface-100);
+  color: var(--p-primary-700);
 }
 
 .main-content {
