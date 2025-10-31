@@ -5,6 +5,8 @@ export const useFormStore = defineStore('form', {
   state: () => ({
     topics: [],
     forms: {},
+    selectedFormId: null,
+    selectedTopicId: null,
     isLoading: false,
     error: null
   }),

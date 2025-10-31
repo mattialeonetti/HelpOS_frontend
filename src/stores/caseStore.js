@@ -26,7 +26,7 @@ export const useCaseStore = defineStore('case', {
             this.isLoading = true
             this.error = null
             try {
-                const response = await api.post(`/topics/${topicId}/forms/${formId}/cases`, { profileId:profileId })
+                const response = await api.post(`/topics/${topicId}/forms/${formId}/runs`, { profileId: profileId })
                 this.caseRun = response
             } catch (err) {
                 this.error = err.message || 'Failed to start case run'
@@ -40,7 +40,7 @@ export const useCaseStore = defineStore('case', {
             this.isLoading = true
             this.error = null
             try {
-                const response = await api.post(`/topics/${this.topicId}/forms/${this.formId}/cases/${this.caseRun.id}/`, answerData)
+                const response = await api.post(`/topics/${this.topicId}/forms/${this.formId}/runs/${this.caseRun.id}/`, answerData)
                 this.caseRun = response
             } catch (err) {
                 this.error = err.message || 'Failed to submit case answer'
@@ -55,7 +55,7 @@ export const useCaseStore = defineStore('case', {
             this.isLoading = true
             this.error = null
             try {
-                const response = await api.post(`/topics/${this.topicId}/forms/${this.formId}/cases/${this.caseRun.id}/close`)
+                const response = await api.post(`/topics/${this.topicId}/forms/${this.formId}/runs/${this.caseRun.id}/close`)
                 this.caseRun = response
             } catch (err) {
                 this.error = err.message || 'Failed to close case run'
@@ -69,7 +69,7 @@ export const useCaseStore = defineStore('case', {
             this.isLoading = true
             this.error = null
             try {
-                const response = await api.get(`/topics/${this.topicId}/forms/${this.formId}/cases`)
+                const response = await api.get(`/topics/${this.topicId}/forms/${this.formId}/runs`)
                 this.cases = response
             } catch (err) {
                 this.error = err.message || 'Failed to fetch cases'

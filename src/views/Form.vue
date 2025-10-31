@@ -19,16 +19,30 @@
 
         <form v-else class="dynamic-form">
           <div v-for="question in formQuestions" :key="question.id" class="form-group">
-            <Question :questionId="question.id" /> 
+            <Question :questionId="question.id" />
           </div>
 
           <div class="form-actions">
-            <Button type="submit" :label="submitForm"/>
-            <Button label="Cancel Case Run" icon="pi pi-arrow-left" @click="$router.push('/form-select')"
+            <Button type="submit" label="Finish Case" @click="isSubmitting = true" />
+            <Button label="Cancel Case" icon="pi pi-arrow-left" @click="$router.push('/form-select')"
               severity="secondary" />
           </div>
         </form>
       </div>
+
+      <Dialog v-model:visible="isSubmitting" modal :closable="false" :dismissable-mask="false"
+        class="submission-dialog">
+        <div class="submission-content">
+          <div v-for="answer in caseStore.caseRun.steps" :key="answer.questionId" class="answer-item">
+            <h3>{{formStore.forms.find(f => f.id === answer.formId)?.title}}</h3>
+            <h4>{{ allQuestionsFlat.find(q => q.id === answer.questionId)?.text }}:</h4>
+            <p>{{ answer.answer }}</p>
+            <Divider />
+            <SelectButton label="Decision: " v-model="decision" :options="['Approve', 'Reject']" class="w-full" />
+            <Button label="Complete Case" @click="completeCase(answer)" />
+          </div>
+        </div>
+      </Dialog>
 
       <!-- Divider -->
       <Divider layout="vertical" class="form-divider" />
@@ -55,9 +69,12 @@ import { useQuestionStore } from '@/stores/questionStore'
 import {
   Card, Button, InputText, Textarea,
   Checkbox, Message,
-  Skeleton, Divider
+  Skeleton, Divider,
+  Dialog,
+  SelectButton
 } from 'primevue'
 import Question from '@/components/Question.vue'
+import { useCaseStore } from '@/stores/caseStore'
 
 const route = useRoute()
 const router = useRouter()
@@ -65,10 +82,18 @@ const formStore = useFormStore()
 const { forms } = storeToRefs(formStore)
 const questionStore = useQuestionStore()
 const { questions, isLoading, error, hasError } = storeToRefs(questionStore)
+const caseStore = useCaseStore()
+
+// Flatten all questions across forms for lookups (e.g., by questionId)
+const allQuestionsFlat = computed(() => Object.values(questions.value || {}).flat())
 
 const formQuestions = computed(() => {
   const formId = route.params.id
-  return questions.value.filter(q => q.formId === formId)
+  console.log('Form ID:', formId)
+  console.log('All questions (by form):', questions.value)
+  const list = (questions.value && questions.value[formId]) ? questions.value[formId] : []
+  console.log('Current form questions:', list)
+  return list.filter(q => !q.parentQuestionId)
 })
 // Form state
 const formData = ref({})
@@ -78,8 +103,7 @@ const allowLeaving = ref(false)
 
 // Get current form
 const currentForm = computed(() => {
-  const formId = route.params.id
-  return forms.value.find(form => form.id === formId)
+  return formStore.forms[formStore.selectedTopicId].find(form => form.id === formStore.selectedFormId)
 })
 
 // Browser beforeunload event - warns when closing tab/window
@@ -107,37 +131,14 @@ onBeforeRouteLeave((to, from, next) => {
   }
 })
 
-const validateForm = () => {
-  fieldErrors.value = {}
-  let isValid = true
-
-  formFields.value.forEach(field => {
-    if (field.required) {
-      const value = formData.value[field.id]
-      if (!value || (typeof value === 'string' && !value.trim())) {
-        fieldErrors.value[field.id] = `${field.label} is required`
-        isValid = false
-      }
-    }
-  })
-
-  return isValid
-}
-
 const loadForm = async () => {
   if (forms.value.length === 0) {
     await formStore.fetchForms()
   }
 }
 
-const submitForm = async () => {
-  if (!validateForm()) {
-    return
-  }
-
+const completeCase = async () => {
   try {
-    isSubmitting.value = true
-
     // Here you would submit the form data
     // await api.post(`forms/${route.params.id}/submissions`, formData.value)
 
@@ -155,17 +156,9 @@ const submitForm = async () => {
   }
 }
 
-// Initialize form data when form changes
-watch(formFields, (newFields) => {
-  const initialData = {}
-  newFields.forEach(field => {
-    initialData[field.id] = field.type === 'checkbox' ? false : ''
-  })
-  formData.value = initialData
-}, { immediate: true })
-
 onMounted(() => {
   loadForm()
+  questionStore.fetchQuestionsForForm(route.params.id)
   // Add browser beforeunload listener
   window.addEventListener('beforeunload', handleBeforeUnload)
 })

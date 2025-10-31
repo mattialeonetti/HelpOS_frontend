@@ -99,11 +99,13 @@ import { useFormStore } from '@/stores/formStore'
 import { Card, Button, Message, Skeleton, Accordion, AccordionPanel, AccordionHeader, AccordionContent, Dialog, InputText, IftaLabel } from 'primevue'
 import { useCaseStore } from '@/stores/caseStore'
 import { useProfileStore } from '@/stores/profileStore'
+import { useQuestionStore } from '@/stores/questionStore'
 
 const router = useRouter()
 const formStore = useFormStore()
 const caseStore = useCaseStore()
 const profileStore = useProfileStore()
+const questionStore = useQuestionStore()
 const { topics, forms, isLoading, error, hasError } = storeToRefs(formStore)
 
 const activeAccordionIndex = ref([])
@@ -117,6 +119,10 @@ const createFormTopicId = ref(null)
 
 const selectForm = async (topicId, formId) => {
   await caseStore.startCaseRun(topicId, formId, profileStore.profile.id)
+  formStore.selectedFormId = formId
+  formStore.selectedTopicId = topicId
+  questionStore.topicId = topicId
+  questionStore.formId = formId
   router.push(`/form/${formId}`)
 }
 
