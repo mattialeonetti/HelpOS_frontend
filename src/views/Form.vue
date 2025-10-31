@@ -8,118 +8,102 @@
         </div>
       </template>
       <template #content>
-        <div v-if="isLoading" class="loading">
-          <ProgressSpinner />
-          <p>Loading form...</p>
-        </div>
-        
-        <Message v-else-if="hasError" severity="error" :closable="false">
-          <div class="error-content">
-            <p>{{ error }}</p>
-            <Button 
-              label="Retry" 
-              icon="pi pi-refresh" 
-              @click="loadForm" 
-              severity="secondary"
-              size="small"
-            />
-          </div>
-        </Message>
-        
-        <form v-else @submit.prevent="submitForm" class="dynamic-form">
-          <!-- Dynamic form fields -->
-          <div v-for="field in formFields" :key="field.id" class="form-group">
-            <label :for="field.id">
-              {{ field.label }}
-              <span v-if="field.required" class="required">*</span>
-            </label>
-            
-            <!-- Text Input -->
-            <InputText 
-              v-if="field.type === 'text'"
-              :id="field.id"
-              v-model="formData[field.id]"
-              :placeholder="field.placeholder"
-              :class="{ 'p-invalid': fieldErrors[field.id] }"
-            />
-            
-            <!-- Textarea -->
-            <Textarea 
-              v-else-if="field.type === 'textarea'"
-              :id="field.id"
-              v-model="formData[field.id]"
-              :placeholder="field.placeholder"
-              rows="4"
-              :class="{ 'p-invalid': fieldErrors[field.id] }"
-            />
-            
-            <!-- Dropdown -->
-            <Dropdown 
-              v-else-if="field.type === 'select'"
-              :id="field.id"
-              v-model="formData[field.id]"
-              :options="field.options"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Select an option"
-              :class="{ 'p-invalid': fieldErrors[field.id] }"
-            />
-            
-            <!-- Checkbox -->
-            <div v-else-if="field.type === 'checkbox'" class="checkbox-group">
-              <Checkbox 
-                :id="field.id"
-                v-model="formData[field.id]"
-                :binary="true"
-              />
-              <label :for="field.id">{{ field.label }}</label>
+        <div class="form-layout">
+          <div class="form-section">
+            <div v-if="isLoading" class="loading">
+              <Skeleton width="50%" height="2rem" />
             </div>
-            
-            <small v-if="fieldErrors[field.id]" class="p-error">
-              {{ fieldErrors[field.id] }}
-            </small>
+
+            <Message v-else-if="hasError" severity="error" :closable="false">
+              <div class="error-content">
+                <p>{{ error }}</p>
+                <Button label="Retry" icon="pi pi-refresh" @click="loadForm" severity="secondary" size="small" />
+              </div>
+            </Message>
+
+            <form v-else @submit.prevent="submitForm" class="dynamic-form">
+              <!-- Dynamic form fields -->
+              <div v-for="field in formFields" :key="field.id" class="form-group">
+                <label :for="field.id">
+                  {{ field.label }}
+                  <span v-if="field.required" class="required">*</span>
+                </label>
+
+                <!-- Text Input -->
+                <InputText v-if="field.type === 'text'" :id="field.id" v-model="formData[field.id]"
+                  :placeholder="field.placeholder" :class="{ 'p-invalid': fieldErrors[field.id] }" />
+
+                <!-- Textarea -->
+                <Textarea v-else-if="field.type === 'textarea'" :id="field.id" v-model="formData[field.id]"
+                  :placeholder="field.placeholder" rows="4" :class="{ 'p-invalid': fieldErrors[field.id] }" />
+
+                <!-- Dropdown -->
+                <Dropdown v-else-if="field.type === 'select'" :id="field.id" v-model="formData[field.id]"
+                  :options="field.options" optionLabel="label" optionValue="value" placeholder="Select an option"
+                  :class="{ 'p-invalid': fieldErrors[field.id] }" />
+
+                <!-- Checkbox -->
+                <div v-else-if="field.type === 'checkbox'" class="checkbox-group">
+                  <Checkbox :id="field.id" v-model="formData[field.id]" :binary="true" />
+                  <label :for="field.id">{{ field.label }}</label>
+                </div>
+
+                <small v-if="fieldErrors[field.id]" class="p-error">
+                  {{ fieldErrors[field.id] }}
+                </small>
+              </div>
+
+              <div class="form-actions">
+                <Button type="submit" :label="isSubmitting ? 'Submitting...' : 'Submit Form'" icon="pi pi-check"
+                  :loading="isSubmitting" :disabled="isSubmitting" />
+                <Button label="Back to Forms" icon="pi pi-arrow-left" @click="$router.push('/form-select')"
+                  severity="secondary" />
+              </div>
+            </form>
           </div>
-          
-          <div class="form-actions">
-            <Button 
-              type="submit" 
-              :label="isSubmitting ? 'Submitting...' : 'Submit Form'"
-              icon="pi pi-check"
-              :loading="isSubmitting"
-              :disabled="isSubmitting"
-            />
-            <Button 
-              label="Back to Forms" 
-              icon="pi pi-arrow-left" 
-              @click="$router.push('/form-select')"
-              severity="secondary"
-            />
+
+          <!-- Divider -->
+          <Divider layout="vertical" class="form-divider" />
+
+          <!-- Right Section: Cases (1/3 width) - Placeholder -->
+          <div class="cases-section">
+            <div class="cases-placeholder">
+              <h3>Cases</h3>
+              <p class="placeholder-text">Case view will be imported here</p>
+              <!-- Cases component will be imported here later -->
+            </div>
           </div>
-        </form>
+        </div>
       </template>
     </Card>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteLeave } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useFormStore } from '@/stores/formStore'
-import { 
-  Card, Button, InputText, Textarea, Dropdown, 
-  Checkbox, Message, ProgressSpinner 
+import {
+  Card, Button, InputText, Textarea, Dropdown,
+  Checkbox, Message, ProgressSpinner,
+  Skeleton, Divider
 } from 'primevue'
+import { useQuestionStore } from '@/stores/questionStore'
 
 const route = useRoute()
 const router = useRouter()
 const formStore = useFormStore()
-const { forms, isLoading, error, hasError } = storeToRefs(formStore)
+const { forms } = storeToRefs(formStore)
+const questionStore = useQuestionStore()
+const { questions, isLoading, error, hasError } = storeToRefs(questionStore)
 
 // Form state
 const formData = ref({})
 const fieldErrors = ref({})
 const isSubmitting = ref(false)
+const allowLeaving = ref(false)
 
 // Get current form
 const currentForm = computed(() => {
@@ -127,49 +111,29 @@ const currentForm = computed(() => {
   return forms.value.find(form => form.id === formId)
 })
 
-// Mock form fields (replace with real data from your API)
-const formFields = computed(() => {
-  // This would typically come from your form definition
-  return currentForm.value?.fields || [
-    {
-      id: 'name',
-      type: 'text',
-      label: 'Full Name',
-      required: true,
-      placeholder: 'Enter your full name'
-    },
-    {
-      id: 'email',
-      type: 'text',
-      label: 'Email',
-      required: true,
-      placeholder: 'Enter your email'
-    },
-    {
-      id: 'message',
-      type: 'textarea',
-      label: 'Message',
-      required: false,
-      placeholder: 'Enter your message'
-    },
-    {
-      id: 'category',
-      type: 'select',
-      label: 'Category',
-      required: true,
-      options: [
-        { value: 'general', label: 'General Inquiry' },
-        { value: 'support', label: 'Support Request' },
-        { value: 'feedback', label: 'Feedback' }
-      ]
-    },
-    {
-      id: 'terms',
-      type: 'checkbox',
-      label: 'I agree to the terms and conditions',
-      required: true
+// Browser beforeunload event - warns when closing tab/window
+const handleBeforeUnload = (e) => {
+  if (!allowLeaving.value) {
+    e.preventDefault()
+    e.returnValue = '' // Chrome requires returnValue to be set
+    return '' // Some browsers use the return value
+  }
+}
+
+// Vue Router navigation guard - warns when navigating to another route
+onBeforeRouteLeave((to, from, next) => {
+  if (!allowLeaving.value) {
+    const answer = window.confirm(
+      'Are you sure you want to leave this page?'
+    )
+    if (answer) {
+      next()
+    } else {
+      next(false)
     }
-  ]
+  } else {
+    next()
+  }
 })
 
 const validateForm = () => {
@@ -202,12 +166,15 @@ const submitForm = async () => {
 
   try {
     isSubmitting.value = true
-    
+
     // Here you would submit the form data
     // await api.post(`forms/${route.params.id}/submissions`, formData.value)
-    
+
     console.log('Form submitted:', formData.value)
-    
+
+    // Allow leaving the page after successful submission (optional - remove if you want to keep prompting)
+    // allowLeaving.value = true
+
     // Show success and redirect
     router.push('/form-select')
   } catch (error) {
@@ -228,13 +195,19 @@ watch(formFields, (newFields) => {
 
 onMounted(() => {
   loadForm()
+  // Add browser beforeunload listener
+  window.addEventListener('beforeunload', handleBeforeUnload)
+})
+
+onBeforeUnmount(() => {
+  // Clean up event listener
+  window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 </script>
 
 <style scoped>
 .form-view {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
   padding: 2rem;
 }
 
@@ -245,6 +218,47 @@ onMounted(() => {
 .form-header p {
   color: #6c757d;
   margin: 0;
+}
+
+/* Two-column layout */
+.form-layout {
+  display: flex;
+  gap: 2rem;
+  min-height: 500px;
+}
+
+/* Left section: Form (2/3 width) */
+.form-section {
+  flex: 2;
+  min-width: 0; /* Prevents flex item from overflowing */
+}
+
+/* Divider styling */
+.form-divider {
+  margin: 0;
+}
+
+/* Right section: Cases (1/3 width) */
+.cases-section {
+  flex: 1;
+  min-width: 250px;
+}
+
+.cases-placeholder {
+  padding: 1rem;
+  background: var(--p-surface-50);
+  border-radius: 6px;
+  height: 100%;
+}
+
+.cases-placeholder h3 {
+  margin: 0 0 1rem 0;
+  color: var(--p-primary-600);
+}
+
+.placeholder-text {
+  color: #6c757d;
+  font-style: italic;
 }
 
 .loading {
@@ -264,7 +278,7 @@ onMounted(() => {
 }
 
 .dynamic-form {
-  margin-top: 2rem;
+  margin-top: 0;
 }
 
 .form-group {
@@ -303,5 +317,20 @@ onMounted(() => {
 .p-error {
   display: block;
   margin-top: 0.25rem;
+}
+
+/* Responsive: Stack on smaller screens */
+@media (max-width: 1024px) {
+  .form-layout {
+    flex-direction: column;
+  }
+  
+  .form-divider {
+    display: none;
+  }
+  
+  .cases-section {
+    min-width: 100%;
+  }
 }
 </style>
