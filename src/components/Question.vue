@@ -13,7 +13,7 @@
       </template>
     </Card>
 
-    <Dialog :visible="showCreateDialog">
+    <Dialog v-model:visible="showCreateDialog" modal :closable="true" :dismissable-mask="true">
       <template #header>Create Sub-Question for this answer</template>
       <div>
         <SelectButton v-model="selectedOptionForCreate" :options="selectOptions" optionLabel="label"
@@ -21,6 +21,10 @@
         <IftaLabel class="w-full">
           <InputText id="question" v-model="form.question" placeholder="Question" showClear fluid />
           <label for="question">Question</label>
+        </IftaLabel>
+        <IftaLabel class="w-full">
+          <InputText id="source" v-model="form.source" placeholder="Source" showClear fluid />
+          <label for="source">Source</label>
         </IftaLabel>
         <div style="display: flex;">
           <Chip v-for="answer in form.answers" :key="answer" :label="answer" removable @remove="removeAnswer(answer)" />
@@ -31,6 +35,9 @@
         <Button label="Add Answer" icon="pi pi-plus" @click="createAnswer" class="mr-2" />
         <Button label="Create" icon="pi pi-check" @click="createSubQuestion" />
       </div>
+      <template #footer>
+        <Button label="Close" severity="secondary" @click="showCreateDialog = false" />
+      </template>
     </Dialog>
     <Question v-for="subQuestion in subQuestions" :key="subQuestion.id" :questionId="subQuestion.id"
       :sub-question-level="subQuestionLevel + 1" />
@@ -42,11 +49,13 @@ import { useCaseStore } from '@/stores/caseStore'
 import { useQuestionStore } from '@/stores/questionStore'
 import { Button, Card, Chip, Dialog, IftaLabel, InputText, SelectButton } from 'primevue'
 import { computed, watch, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 // Ensure self-referencing <Question> works in recursion
 defineOptions({ name: 'Question' })
 
 const questionStore = useQuestionStore()
+const route = useRoute()
 
 const props = defineProps({
   questionId: {
@@ -81,7 +90,8 @@ const selectOptions = computed(() =>
 const form = ref({
   question: '',
   answer: '',
-  answers: []
+  answers: [],
+  source: ''
 })
 
 const createAnswer = () => {
@@ -108,10 +118,11 @@ const createSubQuestion = () => {
     alert('Please fill in the question, add at least one answer, and select an answer option for gating.')
     return
   }
-  questionStore.createQuestion({
+  questionStore.createQuestion(route.params.id, {
     text: form.value.question,
     answerOptions: form.value.answers.map((ans) => ({ label: ans })),
     parentQuestionId: props.questionId,
+    source: form.value.source,
     parentAnswerId: selectedOptionForCreate.value
   })
   // Reset form

@@ -1,11 +1,14 @@
 <template>
   <div class="form-view">
-    <div class="form-header">
-      <h1>{{ currentForm?.title || 'Form' }}</h1>
-      <p v-if="currentForm?.description">{{ currentForm.description }}</p>
-    </div>
     <div class="form-layout">
       <div class="form-section">
+        <div class="form-header">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>{{ currentForm?.title || 'Form' }}</h1>
+            <Button icon="pi pi-plus" @click="showCreateDialog = true" />
+          </div>
+          <p v-if="currentForm?.description">{{ currentForm.description }}</p>
+        </div>
         <div v-if="isLoading" class="loading">
           <Skeleton width="50%" height="2rem" />
         </div>
@@ -23,8 +26,8 @@
           </div>
 
           <div class="form-actions">
-            <Button type="submit" label="Finish Case" @click="isSubmitting = true" />
-            <Button label="Cancel Case" icon="pi pi-arrow-left" @click="$router.push('/form-select')"
+            <Button type="submit" icon="pi pi-check" label="Finish Case" @click="isSubmitting = true" />
+            <Button label="Cancel Case" class="error" icon="pi pi-arrow-left" @click="$router.push('/form-select')"
               severity="secondary" />
           </div>
         </form>
@@ -35,12 +38,35 @@
         <div class="submission-content">
           <div v-for="answer in caseStore.caseRun.steps" :key="answer.questionId" class="answer-item">
             <h3>{{formStore.forms.find(f => f.id === answer.formId)?.title}}</h3>
-            <h4>{{ allQuestionsFlat.find(q => q.id === answer.questionId)?.text }}:</h4>
+            <h4>{{allQuestionsFlat.find(q => q.id === answer.questionId)?.text}}:</h4>
             <p>{{ answer.answer }}</p>
             <Divider />
             <SelectButton label="Decision: " v-model="decision" :options="['Approve', 'Reject']" class="w-full" />
             <Button label="Complete Case" @click="completeCase(answer)" />
           </div>
+        </div>
+      </Dialog>
+
+      <Dialog v-model:visible="showCreateDialog" :closable="true" modal :dismissable-mask="true">
+        <template #header>Create top-level Question</template>
+        <div>
+          <IftaLabel class="w-full">
+            <InputText id="question" v-model="form.question" placeholder="Question" showClear fluid />
+            <label for="question">Question</label>
+          </IftaLabel>
+          <IftaLabel class="w-full">
+            <InputText id="source" v-model="form.source" placeholder="Source" showClear fluid />
+            <label for="source">Source</label>
+          </IftaLabel>
+          <div style="display: flex;">
+            <Chip v-for="answer in form.answers" :key="answer" :label="answer" removable
+              @remove="removeAnswer(answer)" />
+          </div>
+          <div style="display: flex;">
+            <InputText id="answer" v-model="form.answer" placeholder="Answer" showClear fluid />
+          </div>
+          <Button label="Add Answer" icon="pi pi-plus" @click="createAnswer" class="mr-2" />
+          <Button label="Create" icon="pi pi-check" @click="createQuestion" />
         </div>
       </Dialog>
 
@@ -71,7 +97,9 @@ import {
   Checkbox, Message,
   Skeleton, Divider,
   Dialog,
-  SelectButton
+  SelectButton,
+  Chip,
+  IftaLabel
 } from 'primevue'
 import Question from '@/components/Question.vue'
 import { useCaseStore } from '@/stores/caseStore'
@@ -87,12 +115,17 @@ const caseStore = useCaseStore()
 // Flatten all questions across forms for lookups (e.g., by questionId)
 const allQuestionsFlat = computed(() => Object.values(questions.value || {}).flat())
 
+const showCreateDialog = ref(false)
+const form = ref({
+  question: '',
+  answer: '',
+  answers: [],
+  source: ''
+})
+
 const formQuestions = computed(() => {
   const formId = route.params.id
-  console.log('Form ID:', formId)
-  console.log('All questions (by form):', questions.value)
   const list = (questions.value && questions.value[formId]) ? questions.value[formId] : []
-  console.log('Current form questions:', list)
   return list.filter(q => !q.parentQuestionId)
 })
 // Form state
@@ -105,6 +138,17 @@ const allowLeaving = ref(false)
 const currentForm = computed(() => {
   return formStore.forms[formStore.selectedTopicId].find(form => form.id === formStore.selectedFormId)
 })
+
+const createAnswer = () => {
+  if (form.value.answer && !form.value.answers.includes(form.value.answer)) {
+    form.value.answers.push(form.value.answer)
+    form.value.answer = ''
+  }
+}
+
+const removeAnswer = (answer) => {
+  form.value.answers = form.value.answers.filter(a => a !== answer)
+}
 
 // Browser beforeunload event - warns when closing tab/window
 const handleBeforeUnload = (e) => {
@@ -167,6 +211,24 @@ onBeforeUnmount(() => {
   // Clean up event listener
   window.removeEventListener('beforeunload', handleBeforeUnload)
 })
+
+const createQuestion = () => {
+  if (!form.value.question || form.value.answers.length === 0) {
+    alert('Please fill in the question and add at least one answer.')
+    return
+  }
+  questionStore.createQuestion(route.params.id, {
+    text: form.value.question,
+    answerOptions: form.value.answers.map((ans) => ({ label: ans })),
+    source: form.value.source,
+    parentQuestionId: null,
+    parentAnswerId: null
+  })
+  // Reset form
+  form.value.question = ''
+  form.value.answers = []
+  showCreateDialog.value = false
+}
 </script>
 
 <style scoped>
