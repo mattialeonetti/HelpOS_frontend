@@ -1,0 +1,144 @@
+/* Custom Color Overrides */
+:root {
+  /* Font size reduction - reduces all text by ~2pt (from 16px to 14px base) */
+  font-size: 14px;
+  
+  /* Main PrimeVue Primary Color - This is what buttons use */
+  --p-primary-color: #0072bc;
+  --p-primary-contrast-color: #ffffff;
+  
+  /* Primary Color Palette */
+  --p-primary-50: #eff6ff;
+  --p-primary-100: #dbeafe;
+  --p-primary-200: #bfdbfe;
+  --p-primary-300: #93c5fd;
+  --p-primary-400: #60a5fa;
+  --p-primary-500: #3b82f6;  /* Main primary color */
+  --p-primary-600: #2563eb;
+  --p-primary-700: #1d4ed8;
+  --p-primary-800: #1e40af;
+  --p-primary-900: #1e3a8a;
+  --p-primary-950: #172554;
+
+  /* Button specific overrides */
+  --p-button-primary-background: #0072bc;
+  --p-button-primary-border-color: #0072bc;
+  --p-button-primary-color: #ffffff;
+  --p-button-primary-hover-background: #005f8c;
+  --p-button-primary-hover-border-color: #005f8c;
+  --p-button-primary-active-background: #1d4ed8;
+  --p-button-primary-active-border-color: #1d4ed8;
+
+  /* Success Colors - Override Vue green */
+  --p-green-50: #f0fdf4;
+  --p-green-100: #dcfce7;
+  --p-green-200: #bbf7d0;
+  --p-green-300: #86efac;
+  --p-green-400: #4ade80;
+  --p-green-500: #22c55e;  /* Main success color */
+  --p-green-600: #16a34a;
+  --p-green-700: #15803d;
+  --p-green-800: #166534;
+  --p-green-900: #14532d;
+  --p-green-950: #052e16;
+
+  /* Alternative emerald for success */
+  --p-emerald-50: #ecfdf5;
+  --p-emerald-100: #d1fae5;
+  --p-emerald-200: #a7f3d0;
+  --p-emerald-300: #6ee7b7;
+  --p-emerald-400: #34d399;
+  --p-emerald-500: #10b981;  /* Alternative success color */
+  --p-emerald-600: #059669;
+  --p-emerald-700: #047857;
+  --p-emerald-800: #065f46;
+  --p-emerald-900: #064e3b;
+  --p-emerald-950: #022c22;
+
+  /* Surface Colors */
+  --p-surface-0: #ffffff;
+  --p-surface-50: #f8fafc;
+  --p-surface-100: #f1f5f9;
+  --p-surface-200: #e2e8f0;
+  --p-surface-300: #cbd5e1;
+  --p-surface-400: #94a3b8;
+  --p-surface-500: #64748b;
+  --p-surface-600: #475569;
+  --p-surface-700: #334155;
+  --p-surface-800: #1e293b;
+  --p-surface-900: #0f172a;
+  --p-surface-950: #020617;
+}
+
+/* Custom button variants */
+.p-button-success {
+  background: var(--p-emerald-500);
+  border-color: var(--p-emerald-500);
+}
+
+.p-button-success:hover {
+  background: var(--p-emerald-600);
+  border-color: var(--p-emerald-600);
+}
+
+/* Force primary button colors */
+.p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-link) {
+  background: var(--p-primary-color);
+  border-color: var(--p-primary-color);
+  color: var(--p-primary-contrast-color);
+}
+
+.p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-link):hover {
+  background: var(--p-button-primary-hover-background);
+  border-color: var(--p-button-primary-hover-border-color);
+}
+
+/* Custom router link active color */
+.router-link-active {
+  color: var(--p-primary-600) !important;
+}
+
+/* Override any Vue green specifically */
+.vue-green-override {
+  color: var(--p-primary-500) !important;
+}
+
+/* Custom brand colors */
+.brand-primary {
+  color: var(--p-primary-500);
+}
+
+.brand-secondary {
+  color: var(--p-emerald-500);
+}
+
+/* Form validation success color override */
+.p-inputtext.p-valid {
+  border-color: var(--p-emerald-500);
+}
+
+.p-message.p-message-success {
+  background: var(--p-emerald-50);
+  border: 1px solid var(--p-emerald-200);
+  color: var(--p-emerald-800);
+}
+
+.p-message.p-message-success .p-message-icon {
+  color: var(--p-emerald-500);
+}
+
+/* Menu and navigation overrides */
+.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-content .p-menuitem-link:hover {
+  background: var(--p-primary-50);
+  color: var(--p-primary-700);
+}
+
+/* Focus states */
+.p-button:focus {
+  box-shadow: 0 0 0 1px var(--p-primary-500);
+}
+
+/* Progress spinner color */
+.p-progress-spinner-circle {
+  stroke: var(--p-primary-color);
+}
