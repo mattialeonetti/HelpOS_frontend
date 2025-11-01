@@ -15,8 +15,11 @@
           <div class="q-actions">
             <Button icon="pi pi-plus" rounded text @click="showCreateDialog = true"
               v-tooltip.bottom="'Add Sub-Question'" />
-            <Button icon="pi pi-external-link" rounded text :disabled="!question?.source" :url="question?.source"
-              target="_blank" v-tooltip.bottom="'Open source'" />
+            <!-- Open external source in new tab; wrap Button in anchor for reliable navigation -->
+            <a v-if="question?.source" :href="normalizedSource" target="_blank" rel="noopener noreferrer">
+              <Button icon="pi pi-external-link" rounded text v-tooltip.bottom="'Open source'" />
+            </a>
+            <Button v-else icon="pi pi-external-link" rounded text disabled v-tooltip.bottom="'Open source'" />
           </div>
         </div>
       </template>
@@ -100,6 +103,13 @@ const props = defineProps({
 
 const allQuestionsFlat = computed(() => Object.values(questionStore.questions || {}).flat())
 const question = computed(() => allQuestionsFlat.value.find(q => q.id === props.questionId))
+
+// Normalize source to include protocol if missing
+const normalizedSource = computed(() => {
+  const src = question.value?.source?.trim()
+  if (!src) return ''
+  return /^https?:\/\//i.test(src) ? src : `https://${src}`
+})
 
 const selectedOptionId = ref(null)
 const showCreateDialog = ref(false)
