@@ -40,7 +40,13 @@ export const useCaseStore = defineStore('case', {
             this.isLoading = true
             this.error = null
             try {
-                this.caseRun.steps.push(answerData)
+                if (this.caseRun.steps.some(step => step.questionId === answerData.questionId)) {
+                    // Update existing answer
+                    const index = this.caseRun.steps.findIndex(step => step.questionId === answerData.questionId)
+                    this.caseRun.steps[index] = answerData
+                } else {
+                    this.caseRun.steps.push(answerData)
+                }
                 const response = await api.put(`/topics/${this.topicId}/forms/${this.formId}/runs/${this.caseRun.id}`, this.caseRun)
                 this.caseRun = response
                 await this.fetchCasesForForm()
