@@ -149,7 +149,7 @@ const createSubQuestion = () => {
     parentQuestionId: props.questionId,
     parentAnswerId: selectedOptionForCreate.value,
     source: form.value.source
-  })
+  }, props.questionId)
   form.value = { question: '', answer: '', answers: [], source: '' }
 
   selectedOptionForCreate.value = null
