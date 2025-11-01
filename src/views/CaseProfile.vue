@@ -58,7 +58,7 @@
                     </div>
                   </template>
                 </Dropdown>
-                <label for="country">Country of Origin</label>
+                <label for="country">Country of Application</label>
               </IftaLabel>
             </div>
 
