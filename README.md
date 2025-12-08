@@ -1,6 +1,6 @@
 # HelpOS
 
-HelpOS is a web application designed for UNHCR pro-bono lawyers. It's designed to store, organize, and retrieve case outcomes and corresponding legal documents. It was developed during a [UZH DSI](https://www.dsi.uzh.ch/en.html) hackathon for a class on digital platforms for resilience in crisis.
+HelpOS is a web application designed for UNHCR pro-bono lawyers. It's designed to store, organize, and retrieve case outcomes and corresponding legal documents. It was developed during a [UZH DSI](https://www.dsi.uzh.ch/en.html) hackathon for a class on digital platforms for resilience in crisis. This repository constitutes the front end. The back end can be found [in it's own repository](https://github.com/johndonneUZH/helpos-backend). A demo of the application (clipped from the final hackathon presentation) can be found [on google drive](https://drive.google.com/file/d/1JCq09xE18Tdk5GtIT_UuTQa0m7LXaHB5/view?usp=drive_link).
 
 ## Team
 
@@ -18,7 +18,7 @@ We designed HelpOS as a digital legal assistance platform that acts as a knowled
 
 ## Use of AI
 
-AI tools, primarily OpenAI Codex and GitHub Copilot, were used in a limited and well-controlled manner throughout the development of HelpOS. They acted as assistive instruments during implementation without influencing the conceptual, legal, or architectural foundations of the system. 
+AI tools, primarily OpenAI Codex and GitHub Copilot, were used in a limited and well-controlled manner throughout the development of HelpOS. They acted as assistive instruments during implementation without influencing the conceptual, legal, or architectural foundations of the system.
 
 AI was relevant only in the prototyping and implementation phases. Codex and Copilot were used to accelerate low-risk programming tasks, such as generating helper functions, scaffolding repeated backend endpoints, and producing boilerplate Vue component structures. These tools were especially useful when time constraints required rapid iteration. Their contribution was operational and not conceptual. They helped reduce development friction, but responsibility for correctness, security, and data handling remained fully with the development team. All code touching legal logic, data validation, security concerns, or schema definitions was written and reviewed manually. Copilot’s suggestions were incorporated selectively, and only when their behavior was fully understood and aligned with the system’s requirements. In practice, Copilot provided incremental improvements, such as offering completions for repetitive loops, common Spring Boot patterns, or Vue reactivity blocks, while Codex supported quick generation of minor utilities when deadlines demanded increased speed.
 
